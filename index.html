@@ -1,179 +1,104 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>VALOR Command Center</title>
+<title>VALOR Command Center</title>
 
-    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;800&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;800&family=Share+Tech+Mono&display=swap" rel="stylesheet">
 
-    <style>
-        body {
-            margin: 0;
-            font-family: 'Share Tech Mono', monospace;
-            background: #05070a;
-            color: #e5e7eb;
-            overflow: hidden;
-        }
+<!-- LEAFLET MAP -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
-        /* BOOT SCREEN */
-        #boot {
-            position: fixed;
-            width: 100%;
-            height: 100%;
-            background: black;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            font-family: 'Orbitron', sans-serif;
-            z-index: 9999;
-            transition: opacity 1s ease;
-        }
+<style>
+body{
+    margin:0;
+    font-family:'Share Tech Mono', monospace;
+    background:#05070a;
+    color:#e5e7eb;
+}
 
-        .boot-text {
-            color: #22c55e;
-            font-size: 18px;
-            letter-spacing: 2px;
-            animation: blink 1s infinite;
-        }
+/* BOOT */
+#boot{
+    position:fixed;
+    width:100%;
+    height:100%;
+    background:black;
+    display:flex;
+    flex-direction:column;
+    justify-content:center;
+    align-items:center;
+    font-family:'Orbitron';
+    z-index:9999;
+}
+.boot-text{
+    color:#22c55e;
+    font-size:18px;
+    animation:blink 1s infinite;
+}
+@keyframes blink{
+    0%{opacity:1;}
+    50%{opacity:0.2;}
+    100%{opacity:1;}
+}
 
-        @keyframes blink {
-            0% { opacity: 1; }
-            50% { opacity: 0.2; }
-            100% { opacity: 1; }
-        }
+/* HEADER */
+header{
+    background:#0a0f14;
+    padding:20px;
+    border-bottom:1px solid #1f2937;
+    display:flex;
+    justify-content:space-between;
+    font-family:'Orbitron';
+}
+.logo{color:#facc15;font-weight:800}
+.status{color:#22c55e}
 
-        header {
-            background: #0a0f14;
-            padding: 20px;
-            border-bottom: 1px solid #1f2937;
-            display: flex;
-            justify-content: space-between;
-            font-family: 'Orbitron', sans-serif;
-        }
+/* SECTIONS */
+.section{
+    padding:40px 20px;
+    border-bottom:1px solid #111827;
+}
+.title{
+    font-family:'Orbitron';
+    color:#facc15;
+    font-size:22px;
+    margin-bottom:10px;
+}
 
-        .logo {
-            color: #facc15;
-            font-weight: 800;
-            letter-spacing: 2px;
-        }
+/* RANKS */
+.panel{
+    background:#0f172a;
+    padding:15px;
+    border-radius:10px;
+    border:1px solid #1f2937;
+}
 
-        .status {
-            color: #22c55e;
-            animation: blink 1.5s infinite;
-        }
+/* MAP */
+#map{
+    height:500px;
+    border-radius:10px;
+    border:1px solid #1f2937;
+}
 
-        .nav {
-            display: flex;
-            background: #0f172a;
-            border-bottom: 1px solid #1f2937;
-        }
+/* ENLIST */
+.enlist{
+    display:inline-block;
+    margin-top:15px;
+    padding:12px 18px;
+    background:#facc15;
+    color:black;
+    font-weight:bold;
+    text-decoration:none;
+    border-radius:6px;
+}
+.enlist:hover{filter:brightness(1.2)}
 
-        .nav button {
-            flex: 1;
-            padding: 15px;
-            background: none;
-            border: none;
-            color: #9ca3af;
-            cursor: pointer;
-            font-family: 'Orbitron', sans-serif;
-        }
-
-        .nav button:hover {
-            color: #facc15;
-            background: #111827;
-        }
-
-        .nav button.active {
-            color: #facc15;
-            border-bottom: 2px solid #facc15;
-        }
-
-        .page {
-            display: none;
-            padding: 20px;
-        }
-
-        .active-page {
-            display: block;
-        }
-
-        .panel {
-            background: #0f172a;
-            padding: 15px;
-            border-radius: 10px;
-            border: 1px solid #1f2937;
-            margin-bottom: 15px;
-        }
-
-        .panel h2, .panel h3 {
-            font-family: 'Orbitron', sans-serif;
-            color: #facc15;
-        }
-
-        .map {
-            position: relative;
-            height: 350px;
-            background: radial-gradient(circle at center, #0f172a, #05070a);
-            border: 1px solid #1f2937;
-            border-radius: 10px;
-            overflow: hidden;
-        }
-
-        .dot {
-            position: absolute;
-            width: 10px;
-            height: 10px;
-            border-radius: 50%;
-            cursor: pointer;
-            animation: drift 4s infinite ease-in-out;
-        }
-
-        .green { background: #22c55e; box-shadow: 0 0 10px #22c55e; }
-        .red { background: #ef4444; box-shadow: 0 0 10px #ef4444; }
-
-        @keyframes drift {
-            0% { transform: translate(0,0); }
-            50% { transform: translate(6px,-4px); }
-            100% { transform: translate(0,0); }
-        }
-
-        .stream {
-            font-size: 12px;
-            color: #22c55e;
-            height: 120px;
-            overflow: hidden;
-        }
-
-        #popup {
-            position: fixed;
-            bottom: 20px;
-            right: 20px;
-            background: #0f172a;
-            border: 1px solid #1f2937;
-            padding: 10px;
-            display: none;
-            color: #facc15;
-        }
-
-        .enlist {
-            display: inline-block;
-            margin-top: 10px;
-            padding: 12px 18px;
-            background: #facc15;
-            color: black;
-            font-weight: bold;
-            text-decoration: none;
-            border-radius: 6px;
-        }
-
-        .enlist:hover {
-            filter: brightness(1.2);
-        }
-    </style>
+</style>
 </head>
 
 <body>
 
+<!-- BOOT -->
 <div id="boot">
     <div class="boot-text">INITIALIZING VALOR COMMAND SYSTEM...</div>
     <div class="boot-text">VERIFYING CLEARANCE LEVEL...</div>
@@ -182,152 +107,126 @@
 
 <header>
     <div class="logo">[VALOR] COMMAND CENTER</div>
-    <div class="status">SYSTEM ONLINE • ALL UNITS OPERATIONAL</div>
+    <div class="status">SYSTEM ONLINE</div>
 </header>
 
-<div class="nav">
-    <button data-page="dashboard" class="active">Dashboard</button>
-    <button data-page="operations">Operations</button>
-    <button data-page="personnel">Personnel</button>
-    <button data-page="intel">Intel</button>
+<!-- INTRO -->
+<div class="section">
+<div class="title">[VALOR] – Varkonian Armada Land Operations Regiment 🪖</div>
+
+<p>"Silent. Surgical. Certain."</p>
+
+<pre style="color:#9ca3af; white-space:pre-wrap;">
+Born from elite Special Forces & defense experts, VALOR is a Private Military Company specializing in rapid global deployment, precision urban warfare, and surgical strike operations. We don’t just fight — we dominate.
+
+🌍 Current Operations:
+• Blackhawk Rescue Mission 5 — Deployed as international rapid response ops
+• Examination — NSA-authorized containment operations in Menlo
+
+🎖 Promotion Protocol:
+Earned through discipline, combat results & leadership
+Authorized by Armada Council
+</pre>
+
+<a class="enlist" href="https://www.roblox.com/communities/1098707/VALOR-Varkonian-Armada-Land-Operations-Regiment#!/about" target="_blank">
+ENLIST NOW
+</a>
 </div>
 
-<!-- DASHBOARD -->
-<div id="dashboard" class="page active-page">
-    <div class="panel">
-        <h2>VALOR Overview</h2>
-        <p>"Silent. Surgical. Certain."</p>
-    </div>
+<!-- RANKS -->
+<div class="section">
+<div class="title">Rank Structure</div>
+
+<div class="panel">
+<p>9 Operator</p>
+<p>5 Field Operative</p>
+<p>[CLASSIFIED] Special Operations Unit</p>
+<p>Valor Assault Officer</p>
+<p>Security Enforcement Supervisor</p>
+<p>Warfare Operations Command</p>
+<p>Armada Council</p>
+<p>Chief of Valor</p>
+<p>Varkonian President</p>
+</div>
 </div>
 
-<!-- OPS -->
-<div id="operations" class="page">
-
-    <div class="panel">
-        <h3>Live Tactical Map</h3>
-
-        <div class="map">
-            <div class="dot green" style="top:60px; left:90px;" onclick="intel('Friendly Unit Alpha')"></div>
-            <div class="dot green" style="top:160px; left:240px;" onclick="intel('Recon Squad Bravo')"></div>
-            <div class="dot red" style="top:120px; left:180px;" onclick="intel('Hostile Signal Detected')"></div>
-            <div class="dot red" style="top:220px; left:120px;" onclick="intel('Unknown Contact')"></div>
-        </div>
-    </div>
-
-    <div class="panel">
-        <h3>ENCRYPTED STREAM</h3>
-        <div class="stream" id="stream"></div>
-    </div>
-
-    <a class="enlist" href="https://www.roblox.com/communities/1098707/VALOR-Varkonian-Armada-Land-Operations-Regiment#!/about" target="_blank">
-        ENLIST NOW
-    </a>
-
+<!-- LIVE FEED -->
+<div class="section">
+<div class="title">Live Intel Feed</div>
+<div class="panel" id="feed"></div>
 </div>
 
-<!-- PERSONNEL -->
-<div id="personnel" class="page">
-    <div class="panel">
-        <h3>Rank Structure</h3>
-        <p>9 Operator</p>
-        <p>5 Field Operative</p>
-        <p>[CLASSIFIED] Special Operations Unit</p>
-        <p>1 Valor Assault Officer</p>
-        <p>1 Security Enforcement Supervisor</p>
-        <p>2 Warfare Operations Command</p>
-        <p>4 The Armada Council</p>
-        <p>1 Chief of Valor</p>
-        <p>1 Varkonian President</p>
-    </div>
+<!-- MAP -->
+<div class="section">
+<div class="title">Tactical Operations Map</div>
+<div id="map"></div>
 </div>
-
-<!-- INTEL -->
-<div id="intel" class="page">
-    <div class="panel">
-        <h3>Live Intel Feed</h3>
-        <div id="feed"></div>
-    </div>
-</div>
-
-<div id="popup"></div>
 
 <script>
 
-/* BOOT FIX */
-setTimeout(() => {
-    const boot = document.getElementById("boot");
-    boot.style.opacity = "0";
-    setTimeout(() => boot.remove(), 1000);
-}, 2500);
+/* BOOT */
+setTimeout(()=>{
+    document.getElementById("boot").style.display="none";
+},2500);
 
-/* NAV FIX (THIS WAS YOUR MAIN BUG) */
-document.querySelectorAll(".nav button").forEach(btn => {
-    btn.addEventListener("click", () => {
+/* MAP INIT (REAL WORLD MAP) */
+const map = L.map('map').setView([59.9139, 10.7522], 3); // Oslo center
 
-        const page = btn.dataset.page;
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '&copy; OpenStreetMap'
+}).addTo(map);
 
-        document.querySelectorAll(".page").forEach(p => p.classList.remove("active-page"));
-        document.getElementById(page).classList.add("active-page");
+/* DYNAMIC UNITS */
+function createUnit(type){
 
-        document.querySelectorAll(".nav button").forEach(b => b.classList.remove("active"));
-        btn.classList.add("active");
-    });
-});
+    const lat = (Math.random()*140)-70;
+    const lng = (Math.random()*360)-180;
 
-/* STREAM */
-const stream = document.getElementById("stream");
+    const speed = Math.random()*0.0008 + 0.0002; // different speeds
 
-setInterval(() => {
-    if(!stream) return;
+    const color = type === "green" ? "green" : "red";
 
-    const chars = "01█▓▒░<>/\\|VALOR OPS";
-    let line = "";
+    const marker = L.circleMarker([lat,lng],{
+        radius:6,
+        color:color,
+        fillColor:color,
+        fillOpacity:1
+    }).addTo(map);
 
-    for(let i=0;i<50;i++){
-        line += chars[Math.floor(Math.random()*chars.length)];
+    function move(){
+        const pos = marker.getLatLng();
+        marker.setLatLng([
+            pos.lat + (Math.random()-0.5)*speed*10,
+            pos.lng + (Math.random()-0.5)*speed*10
+        ]);
     }
 
-    const p = document.createElement("p");
-    p.textContent = line + "█";
+    setInterval(move, 1000 + Math.random()*2000);
+}
 
-    stream.prepend(p);
-    if(stream.children.length > 8) stream.removeChild(stream.lastChild);
-
-}, 120);
+/* SPAWN UNITS */
+for(let i=0;i<18;i++) createUnit("green");
+for(let i=0;i<10;i++) createUnit("red");
 
 /* FEED */
 const feed = document.getElementById("feed");
 
 const events = [
-    "Unit moving through Ronograd",
-    "Hostile contact locked",
-    "Drone overwatch active",
-    "Extraction window confirmed",
-    "Perimeter stabilized"
+"Unit deployed to Ronograd",
+"Hostile contact detected",
+"Drone surveillance active",
+"Extraction window opening",
+"Sector stabilized"
 ];
 
-setInterval(() => {
-    if(!feed) return;
-
-    const time = new Date().toLocaleTimeString();
-    const e = events[Math.floor(Math.random()*events.length)];
-
+setInterval(()=>{
     const p = document.createElement("p");
-    p.textContent = `[${time}] ${e}`;
+    p.textContent = `[${new Date().toLocaleTimeString()}] ${events[Math.floor(Math.random()*events.length)]}`;
 
     feed.prepend(p);
-    if(feed.children.length > 8) feed.removeChild(feed.lastChild);
+    if(feed.children.length>10) feed.removeChild(feed.lastChild);
 
-}, 2000);
-
-/* INTEL */
-function intel(text){
-    const box = document.getElementById("popup");
-    box.style.display = "block";
-    box.textContent = "INTEL: " + text;
-
-    setTimeout(() => box.style.display="none", 2500);
-}
+},2000);
 
 </script>
 
