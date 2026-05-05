@@ -1,95 +1,111 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>VALOR Command Center</title>
     <style>
         body {
             margin: 0;
-            font-family: Arial, sans-serif;
-            background: #0b0f14;
-            color: #d6e2f0;
+            font-family: Arial;
+            background: #05070a;
+            color: #e5e7eb;
         }
 
         header {
-            background: #0f1722;
+            background: #0a0f14;
             padding: 20px;
-            border-bottom: 1px solid #1f2a3a;
+            border-bottom: 1px solid #1f2937;
             display: flex;
             justify-content: space-between;
-            align-items: center;
         }
 
         .logo {
-            font-size: 20px;
+            color: #facc15;
             font-weight: bold;
             letter-spacing: 2px;
-            color: #7dd3fc;
         }
 
         .status {
-            font-size: 12px;
-            color: #4ade80;
+            color: #22c55e;
         }
 
         .container {
-            display: grid;
-            grid-template-columns: 1fr 1fr 1fr;
-            gap: 20px;
             padding: 20px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
         }
 
         .panel {
-            background: #0f1722;
-            border: 1px solid #1f2a3a;
-            border-radius: 10px;
+            background: #0f172a;
             padding: 15px;
+            border-radius: 10px;
+            border: 1px solid #1f2937;
         }
 
         .panel h3 {
-            margin-top: 0;
-            color: #93c5fd;
+            color: #facc15;
         }
 
-        .card {
-            background: #111827;
-            padding: 10px;
-            margin-top: 10px;
-            border-radius: 8px;
-            border: 1px solid #1f2a3a;
+        .accent-red {
+            border-left: 4px solid #ef4444;
         }
 
-        .footer {
-            text-align: center;
-            padding: 20px;
-            font-size: 12px;
-            color: #6b7280;
+        .accent-yellow {
+            border-left: 4px solid #facc15;
         }
 
-        .button {
-            background: #2563eb;
-            color: white;
-            padding: 8px 12px;
-            border: none;
-            border-radius: 6px;
-            cursor: pointer;
-            margin-top: 10px;
+        .full {
+            grid-column: span 2;
         }
 
-        .button:hover {
-            background: #1d4ed8;
+        .divider {
+            margin: 20px 0;
+            border-top: 1px solid #1f2937;
         }
     </style>
 </head>
 <body>
 
 <header>
-    <div class="logo">VALOR COMMAND CENTER</div>
+    <div class="logo">[VALOR] COMMAND CENTER</div>
     <div class="status">SYSTEM ONLINE • ALL UNITS OPERATIONAL</div>
 </header>
 
 <div class="container">
 
-    <div class="panel">
+    <div class="panel accent-yellow full">
+        <h2>Varkonian Armada Land Operations Regiment</h2>
+        <p><i>"Silent. Surgical. Certain."</i></p>
+        <p>Born from elite Special Forces & defense experts, VALOR is a Private Military Company specializing in rapid global deployment, precision urban warfare, and surgical strike operations.</p>
+    </div>
+
+    <div class="panel accent-red">
+        <h3>🌍 Current Operations</h3>
+        <p>🛰️ Blackhawk Rescue Mission 5</p>
+        <p>🧪 Examination (NSA Contract)</p>
+        <p>Menlo infected zone containment & Ronograd combat ops</p>
+    </div>
+
+    <div class="panel accent-yellow">
+        <h3>🎖️ Promotion Protocol</h3>
+        <p>Promotion earned through discipline, combat results & leadership.</p>
+        <p>Authorized by Armada Council + higher.</p>
+    </div>
+
+    <div class="panel accent-red full">
+        <h3>🪖 VALOR Rank Structure</h3>
+        <p>9 Operator</p>
+        <p>5 Field Operative</p>
+        <p>3 Special Operations Unit</p>
+        <p>1 Valor Assault Officer</p>
+        <p>1 Security Enforcement Supervisor</p>
+        <p>2 Warfare Operations Command</p>
+        <p>4 The Armada Council</p>
+        <p>1 Chief of Valor</p>
+        <p>1 Varkonian President</p>
+    </div>
+
+</div>
+
+</body>
 </html>
