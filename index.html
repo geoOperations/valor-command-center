@@ -1,10 +1,95 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>Admin Center</title>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>VALOR Command Center</title>
+    <style>
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: #0b0f14;
+            color: #d6e2f0;
+        }
+
+        header {
+            background: #0f1722;
+            padding: 20px;
+            border-bottom: 1px solid #1f2a3a;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 20px;
+            font-weight: bold;
+            letter-spacing: 2px;
+            color: #7dd3fc;
+        }
+
+        .status {
+            font-size: 12px;
+            color: #4ade80;
+        }
+
+        .container {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 20px;
+            padding: 20px;
+        }
+
+        .panel {
+            background: #0f1722;
+            border: 1px solid #1f2a3a;
+            border-radius: 10px;
+            padding: 15px;
+        }
+
+        .panel h3 {
+            margin-top: 0;
+            color: #93c5fd;
+        }
+
+        .card {
+            background: #111827;
+            padding: 10px;
+            margin-top: 10px;
+            border-radius: 8px;
+            border: 1px solid #1f2a3a;
+        }
+
+        .footer {
+            text-align: center;
+            padding: 20px;
+            font-size: 12px;
+            color: #6b7280;
+        }
+
+        .button {
+            background: #2563eb;
+            color: white;
+            padding: 8px 12px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+
+        .button:hover {
+            background: #1d4ed8;
+        }
+    </style>
 </head>
 <body>
-    <h1>Welcome to Admin Center</h1>
-    <p>Your site is live.</p>
-</body>
+
+<header>
+    <div class="logo">VALOR COMMAND CENTER</div>
+    <div class="status">SYSTEM ONLINE • ALL UNITS OPERATIONAL</div>
+</header>
+
+<div class="container">
+
+    <div class="panel">
 </html>
