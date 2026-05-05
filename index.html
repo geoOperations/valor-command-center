@@ -26,6 +26,7 @@
             align-items: center;
             font-family: 'Orbitron', sans-serif;
             z-index: 9999;
+            transition: opacity 1s ease;
         }
 
         .boot-text {
@@ -74,6 +75,7 @@
             border: none;
             color: #9ca3af;
             cursor: pointer;
+            font-family: 'Orbitron', sans-serif;
         }
 
         .nav button:hover {
@@ -108,7 +110,6 @@
             color: #facc15;
         }
 
-        /* MAP */
         .map {
             position: relative;
             height: 350px;
@@ -124,39 +125,25 @@
             height: 10px;
             border-radius: 50%;
             cursor: pointer;
+            animation: drift 4s infinite ease-in-out;
         }
 
         .green { background: #22c55e; box-shadow: 0 0 10px #22c55e; }
         .red { background: #ef4444; box-shadow: 0 0 10px #ef4444; }
 
-        /* MOVEMENT */
         @keyframes drift {
             0% { transform: translate(0,0); }
-            50% { transform: translate(10px,-6px); }
+            50% { transform: translate(6px,-4px); }
             100% { transform: translate(0,0); }
         }
 
-        .green, .red {
-            animation: drift 3s infinite ease-in-out;
-        }
-
-        /* STREAM */
         .stream {
             font-size: 12px;
             color: #22c55e;
             height: 120px;
             overflow: hidden;
-            position: relative;
         }
 
-        .cursor {
-            display: inline-block;
-            width: 8px;
-            background: #22c55e;
-            animation: blink 0.8s infinite;
-        }
-
-        /* INTEL POPUP */
         #popup {
             position: fixed;
             bottom: 20px;
@@ -176,14 +163,17 @@
             color: black;
             font-weight: bold;
             text-decoration: none;
+            border-radius: 6px;
         }
 
+        .enlist:hover {
+            filter: brightness(1.2);
+        }
     </style>
 </head>
 
 <body>
 
-<!-- BOOT SCREEN -->
 <div id="boot">
     <div class="boot-text">INITIALIZING VALOR COMMAND SYSTEM...</div>
     <div class="boot-text">VERIFYING CLEARANCE LEVEL...</div>
@@ -196,10 +186,10 @@
 </header>
 
 <div class="nav">
-    <button onclick="showPage('dashboard')" class="active">Dashboard</button>
-    <button onclick="showPage('operations')">Operations</button>
-    <button onclick="showPage('personnel')">Personnel</button>
-    <button onclick="showPage('intel')">Intel</button>
+    <button data-page="dashboard" class="active">Dashboard</button>
+    <button data-page="operations">Operations</button>
+    <button data-page="personnel">Personnel</button>
+    <button data-page="intel">Intel</button>
 </div>
 
 <!-- DASHBOARD -->
@@ -210,19 +200,17 @@
     </div>
 </div>
 
-<!-- OPERATIONS -->
+<!-- OPS -->
 <div id="operations" class="page">
 
     <div class="panel">
         <h3>Live Tactical Map</h3>
 
         <div class="map">
-
             <div class="dot green" style="top:60px; left:90px;" onclick="intel('Friendly Unit Alpha')"></div>
             <div class="dot green" style="top:160px; left:240px;" onclick="intel('Recon Squad Bravo')"></div>
             <div class="dot red" style="top:120px; left:180px;" onclick="intel('Hostile Signal Detected')"></div>
             <div class="dot red" style="top:220px; left:120px;" onclick="intel('Unknown Contact')"></div>
-
         </div>
     </div>
 
@@ -261,47 +249,51 @@
     </div>
 </div>
 
-<!-- POPUP -->
 <div id="popup"></div>
 
 <script>
 
-/* BOOT SCREEN */
+/* BOOT FIX */
 setTimeout(() => {
-    document.getElementById("boot").style.display = "none";
-}, 3000);
+    const boot = document.getElementById("boot");
+    boot.style.opacity = "0";
+    setTimeout(() => boot.remove(), 1000);
+}, 2500);
 
-/* NAV */
-function showPage(pageId) {
-    document.querySelectorAll('.page').forEach(p => p.classList.remove('active-page'));
-    document.getElementById(pageId).classList.add('active-page');
+/* NAV FIX (THIS WAS YOUR MAIN BUG) */
+document.querySelectorAll(".nav button").forEach(btn => {
+    btn.addEventListener("click", () => {
 
-    document.querySelectorAll('.nav button').forEach(btn => btn.classList.remove('active'));
-    event.target.classList.add('active');
-}
+        const page = btn.dataset.page;
+
+        document.querySelectorAll(".page").forEach(p => p.classList.remove("active-page"));
+        document.getElementById(page).classList.add("active-page");
+
+        document.querySelectorAll(".nav button").forEach(b => b.classList.remove("active"));
+        btn.classList.add("active");
+    });
+});
 
 /* STREAM */
 const stream = document.getElementById("stream");
 
-function addStream() {
-    const chars = "01█▓▒░<>/\\|VALOROPS";
+setInterval(() => {
+    if(!stream) return;
+
+    const chars = "01█▓▒░<>/\\|VALOR OPS";
     let line = "";
 
-    for(let i = 0; i < 50; i++) {
-        line += chars[Math.floor(Math.random() * chars.length)];
+    for(let i=0;i<50;i++){
+        line += chars[Math.floor(Math.random()*chars.length)];
     }
 
     const p = document.createElement("p");
     p.textContent = line + "█";
 
     stream.prepend(p);
+    if(stream.children.length > 8) stream.removeChild(stream.lastChild);
 
-    if(stream.children.length > 8) {
-        stream.removeChild(stream.lastChild);
-    }
-}
-
-setInterval(addStream, 120);
+}, 120);
 
 /* FEED */
 const feed = document.getElementById("feed");
@@ -314,29 +306,27 @@ const events = [
     "Perimeter stabilized"
 ];
 
-function addFeed() {
+setInterval(() => {
+    if(!feed) return;
+
     const time = new Date().toLocaleTimeString();
-    const e = events[Math.floor(Math.random() * events.length)];
+    const e = events[Math.floor(Math.random()*events.length)];
 
     const p = document.createElement("p");
     p.textContent = `[${time}] ${e}`;
 
     feed.prepend(p);
-
     if(feed.children.length > 8) feed.removeChild(feed.lastChild);
-}
 
-setInterval(addFeed, 2000);
+}, 2000);
 
-/* MAP INTEL */
-function intel(text) {
+/* INTEL */
+function intel(text){
     const box = document.getElementById("popup");
     box.style.display = "block";
     box.textContent = "INTEL: " + text;
 
-    setTimeout(() => {
-        box.style.display = "none";
-    }, 3000);
+    setTimeout(() => box.style.display="none", 2500);
 }
 
 </script>
