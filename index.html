@@ -26,6 +26,13 @@
 
         .status {
             color: #22c55e;
+            animation: blink 1.5s infinite;
+        }
+
+        @keyframes blink {
+            0% { opacity: 1; }
+            50% { opacity: 0.3; }
+            100% { opacity: 1; }
         }
 
         .container {
@@ -40,6 +47,11 @@
             padding: 15px;
             border-radius: 10px;
             border: 1px solid #1f2937;
+            transition: 0.3s;
+        }
+
+        .panel:hover {
+            box-shadow: 0 0 10px rgba(250, 204, 21, 0.2);
         }
 
         .panel h3 {
@@ -58,10 +70,10 @@
             grid-column: span 2;
         }
 
-        .divider {
-            margin: 20px 0;
-            border-top: 1px solid #1f2937;
-        }
+        .threat-low { color: #22c55e; }
+        .threat-elevated { color: #facc15; }
+        .threat-critical { color: #ef4444; }
+
     </style>
 </head>
 <body>
@@ -84,6 +96,7 @@
         <p>🛰️ Blackhawk Rescue Mission 5</p>
         <p>🧪 Examination (NSA Contract)</p>
         <p>Menlo infected zone containment & Ronograd combat ops</p>
+        <p id="threat" class="threat-elevated">Threat Level: ELEVATED</p>
     </div>
 
     <div class="panel accent-yellow">
@@ -106,6 +119,27 @@
     </div>
 
 </div>
+
+<script>
+setInterval(() => {
+    const levels = ["LOW", "ELEVATED", "CRITICAL"];
+    const random = levels[Math.floor(Math.random() * levels.length)];
+    const threat = document.getElementById("threat");
+
+    threat.innerText = "Threat Level: " + random;
+
+    threat.classList.remove("threat-low", "threat-elevated", "threat-critical");
+
+    if(random === "LOW") {
+        threat.classList.add("threat-low");
+    } else if(random === "ELEVATED") {
+        threat.classList.add("threat-elevated");
+    } else {
+        threat.classList.add("threat-critical");
+    }
+
+}, 3000);
+</script>
 
 </body>
 </html>
