@@ -1,234 +1,813 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>VALOR Command Center</title>
-
-<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;800&family=Share+Tech+Mono&display=swap" rel="stylesheet">
-
-<!-- LEAFLET MAP -->
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Bebas+Neue&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <style>
-body{
-    margin:0;
-    font-family:'Share Tech Mono', monospace;
-    background:#05070a;
-    color:#e5e7eb;
+:root{
+  --gold:#c9a84c;--gold-dim:#7a5f28;--green:#22c55e;
+  --red:#ef4444;--bg:#060a0d;--surface:#0d1117;
+  --border:rgba(201,168,76,0.15);--border-bright:rgba(201,168,76,0.4);
+  --text:#d1d5db;--text-dim:#6b7280;
+  --mono:'Share Tech Mono',monospace;--display:'Bebas Neue',sans-serif;--body:'Rajdhani',sans-serif;
 }
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:var(--bg);color:var(--text);font-family:var(--body);font-size:16px;overflow-x:hidden;}
 
 /* BOOT */
-#boot{
-    position:fixed;
-    width:100%;
-    height:100%;
-    background:black;
-    display:flex;
-    flex-direction:column;
-    justify-content:center;
-    align-items:center;
-    font-family:'Orbitron';
-    z-index:9999;
-}
-.boot-text{
-    color:#22c55e;
-    font-size:18px;
-    animation:blink 1s infinite;
-}
-@keyframes blink{
-    0%{opacity:1;}
-    50%{opacity:0.2;}
-    100%{opacity:1;}
-}
+#boot{position:fixed;inset:0;background:#000;z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;transition:opacity 0.6s ease;}
+#boot.fade{opacity:0;pointer-events:none;}
+.boot-logo{font-family:var(--display);font-size:clamp(48px,10vw,90px);letter-spacing:0.2em;color:var(--gold);margin-bottom:40px;animation:flicker 3s ease-in-out;}
+@keyframes flicker{0%,100%{opacity:1;}5%{opacity:0.1;}10%{opacity:1;}30%{opacity:0.8;}32%{opacity:0.2;}34%{opacity:0.9;}}
+.boot-line{font-family:var(--mono);font-size:13px;color:var(--green);margin:4px 0;opacity:0;animation:fadein 0.4s ease forwards;}
+.boot-line:nth-child(2){animation-delay:0.3s;}
+.boot-line:nth-child(3){animation-delay:0.8s;}
+.boot-line:nth-child(4){animation-delay:1.3s;}
+.boot-line:nth-child(5){animation-delay:1.8s;color:var(--gold);font-size:15px;letter-spacing:3px;margin-top:16px;}
+@keyframes fadein{to{opacity:1;}}
+.boot-bar-wrap{width:320px;height:2px;background:rgba(255,255,255,0.08);margin-top:28px;overflow:hidden;opacity:0;animation:fadein 0.3s 0.5s ease forwards;}
+.boot-bar{height:100%;background:var(--gold);width:0;animation:progress 1.6s 0.6s ease forwards;}
+@keyframes progress{to{width:100%;}}
+body::after{content:'';position:fixed;inset:0;pointer-events:none;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,0.04) 2px,rgba(0,0,0,0.04) 4px);z-index:10;}
 
 /* HEADER */
-header{
-    background:#0a0f14;
-    padding:20px;
-    border-bottom:1px solid #1f2937;
-    display:flex;
-    justify-content:space-between;
-    font-family:'Orbitron';
-}
-.logo{color:#facc15;font-weight:800}
-.status{color:#22c55e}
+header{position:sticky;top:0;z-index:100;background:rgba(6,10,13,0.92);backdrop-filter:blur(12px);border-bottom:1px solid var(--border-bright);padding:0 32px;height:64px;display:flex;align-items:center;justify-content:space-between;}
+.header-left{display:flex;align-items:center;gap:16px;}
+.valor-badge{width:36px;height:36px;border:1.5px solid var(--gold);transform:rotate(45deg);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.valor-badge span{transform:rotate(-45deg);font-family:var(--display);font-size:14px;color:var(--gold);}
+.header-title{font-family:var(--display);font-size:22px;letter-spacing:0.18em;color:var(--gold);}
+.header-sub{font-family:var(--mono);font-size:11px;color:var(--text-dim);letter-spacing:0.1em;margin-top:1px;}
+.header-right{display:flex;align-items:center;gap:24px;}
+.status-dot{display:flex;align-items:center;gap:8px;font-family:var(--mono);font-size:12px;color:var(--green);}
+.status-dot::before{content:'';width:8px;height:8px;border-radius:50%;background:var(--green);animation:pulse 2s infinite;}
+@keyframes pulse{0%,100%{box-shadow:0 0 0 2px rgba(34,197,94,0.2);}50%{box-shadow:0 0 0 5px transparent;}}
+.clearance-badge{font-family:var(--mono);font-size:11px;padding:4px 10px;border:1px solid var(--gold-dim);color:var(--gold);letter-spacing:0.1em;}
 
-/* SECTIONS */
-.section{
-    padding:40px 20px;
-    border-bottom:1px solid #111827;
-}
-.title{
-    font-family:'Orbitron';
-    color:#facc15;
-    font-size:22px;
-    margin-bottom:10px;
-}
+/* STATS */
+.stats-bar{display:grid;grid-template-columns:repeat(4,1fr);border-bottom:1px solid var(--border);}
+.stat-cell{padding:24px 28px;border-right:1px solid var(--border);}
+.stat-cell:last-child{border-right:none;}
+.stat-label{font-family:var(--mono);font-size:11px;color:var(--text-dim);letter-spacing:0.15em;text-transform:uppercase;margin-bottom:6px;}
+.stat-value{font-family:var(--display);font-size:32px;letter-spacing:0.05em;color:#fff;line-height:1;}
+.stat-value.gold{color:var(--gold);}
+.stat-value.green{color:var(--green);}
+.stat-value.red{color:var(--red);}
+.stat-sub{font-family:var(--mono);font-size:11px;color:var(--text-dim);margin-top:4px;}
 
-/* RANKS */
-.panel{
-    background:#0f172a;
-    padding:15px;
-    border-radius:10px;
-    border:1px solid #1f2937;
-}
+/* HERO */
+.hero{position:relative;padding:80px 48px 64px;border-bottom:1px solid var(--border);overflow:hidden;}
+.hero-bg{position:absolute;inset:0;background:radial-gradient(ellipse 60% 80% at 80% 50%,rgba(201,168,76,0.04) 0%,transparent 70%),radial-gradient(ellipse 40% 60% at 20% 50%,rgba(34,197,94,0.03) 0%,transparent 70%);}
+.hero-grid{position:absolute;inset:0;background-image:linear-gradient(rgba(201,168,76,0.04) 1px,transparent 1px),linear-gradient(90deg,rgba(201,168,76,0.04) 1px,transparent 1px);background-size:40px 40px;mask-image:radial-gradient(ellipse 80% 80% at 50% 50%,black 30%,transparent 100%);}
+.hero-tag{font-family:var(--mono);font-size:11px;color:var(--gold);letter-spacing:0.25em;margin-bottom:16px;}
+.hero-title{font-family:var(--display);font-size:clamp(40px,6vw,72px);letter-spacing:0.06em;line-height:1;color:#fff;margin-bottom:8px;}
+.hero-title span{color:var(--gold);}
+.hero-tagline{font-family:var(--mono);font-size:14px;color:var(--text-dim);letter-spacing:0.15em;margin-bottom:32px;}
+.hero-body{font-size:15px;color:var(--text);line-height:1.7;max-width:600px;margin-bottom:32px;}
+.ops-row{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:36px;}
+.ops-tag{font-family:var(--mono);font-size:12px;padding:6px 14px;border:1px solid var(--border-bright);color:var(--gold);background:rgba(201,168,76,0.05);}
+.enlist-btn{display:inline-flex;align-items:center;gap:10px;padding:14px 28px;background:var(--gold);color:#000;font-family:var(--display);font-size:18px;letter-spacing:0.15em;text-decoration:none;transition:background 0.2s,transform 0.15s;}
+.enlist-btn:hover{background:#e0ba60;transform:translateY(-1px);}
 
-/* MAP */
-#map{
-    height:500px;
-    border-radius:10px;
-    border:1px solid #1f2937;
+/* ══════════════════════════════════════════
+   PRESIDENTIAL COMMAND SUITE
+══════════════════════════════════════════ */
+.pres-suite{
+  position:relative;
+  padding:0;
+  border-bottom:1px solid var(--border-bright);
+  overflow:hidden;
+  background:linear-gradient(135deg,#080c10 0%,#0c1219 40%,#0a0e0a 100%);
 }
-
-/* ENLIST */
-.enlist{
-    display:inline-block;
-    margin-top:15px;
-    padding:12px 18px;
-    background:#facc15;
-    color:black;
-    font-weight:bold;
-    text-decoration:none;
-    border-radius:6px;
+.pres-suite-bg{
+  position:absolute;inset:0;pointer-events:none;
+  background:
+    radial-gradient(ellipse 50% 100% at 0% 50%,rgba(201,168,76,0.08) 0%,transparent 60%),
+    radial-gradient(ellipse 30% 80% at 100% 50%,rgba(201,168,76,0.04) 0%,transparent 60%);
 }
-.enlist:hover{filter:brightness(1.2)}
+.pres-suite-grid{
+  position:absolute;inset:0;pointer-events:none;
+  background-image:linear-gradient(rgba(201,168,76,0.03) 1px,transparent 1px),linear-gradient(90deg,rgba(201,168,76,0.03) 1px,transparent 1px);
+  background-size:30px 30px;
+}
+.pres-corner{position:absolute;width:20px;height:20px;border-color:var(--gold);border-style:solid;opacity:0.5;}
+.pres-corner.tl{top:16px;left:16px;border-width:2px 0 0 2px;}
+.pres-corner.tr{top:16px;right:16px;border-width:2px 2px 0 0;}
+.pres-corner.bl{bottom:16px;left:16px;border-width:0 0 2px 2px;}
+.pres-corner.br{bottom:16px;right:16px;border-width:0 2px 2px 0;}
 
+.pres-inner{position:relative;z-index:2;display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:40px;padding:40px 48px;}
+
+/* LEFT — seal */
+.pres-seal{
+  width:110px;height:110px;border-radius:50%;
+  border:2px solid var(--gold);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  position:relative;flex-shrink:0;
+  animation:sealPulse 3s ease-in-out infinite;
+}
+@keyframes sealPulse{0%,100%{box-shadow:0 0 0 0 rgba(201,168,76,0.0),0 0 18px rgba(201,168,76,0.15);}50%{box-shadow:0 0 0 8px rgba(201,168,76,0.05),0 0 30px rgba(201,168,76,0.25);}}
+.pres-seal-roman{font-family:var(--display);font-size:32px;letter-spacing:0.1em;color:var(--gold);line-height:1;}
+.pres-seal-label{font-family:var(--mono);font-size:8px;color:var(--gold-dim);letter-spacing:0.2em;margin-top:2px;}
+.pres-seal-ring{position:absolute;inset:-8px;border-radius:50%;border:1px solid rgba(201,168,76,0.2);}
+.pres-seal-ring2{position:absolute;inset:-16px;border-radius:50%;border:1px solid rgba(201,168,76,0.08);}
+
+/* CENTER — info */
+.pres-rank-tag{font-family:var(--mono);font-size:10px;color:var(--gold-dim);letter-spacing:0.3em;margin-bottom:8px;}
+.pres-name{
+  font-family:var(--display);font-size:clamp(36px,5vw,58px);letter-spacing:0.08em;
+  color:var(--gold);line-height:1;margin-bottom:6px;
+  position:relative;display:inline-block;
+  cursor:default;
+  transition:text-shadow 0.3s ease;
+}
+.pres-name:hover{
+  text-shadow:0 0 8px rgba(201,168,76,0.6),0 0 20px rgba(201,168,76,0.35),0 0 40px rgba(201,168,76,0.15);
+}
+.pres-name::after{
+  content:'';
+  position:absolute;bottom:-4px;left:0;right:0;height:1px;
+  background:linear-gradient(90deg,transparent,var(--gold),transparent);
+  opacity:0;transition:opacity 0.3s ease;
+}
+.pres-name:hover::after{opacity:1;}
+.pres-title{font-family:var(--display);font-size:18px;letter-spacing:0.2em;color:rgba(201,168,76,0.5);margin-bottom:16px;}
+.pres-badges{display:flex;gap:8px;flex-wrap:wrap;}
+.pres-badge{font-family:var(--mono);font-size:10px;padding:4px 10px;letter-spacing:0.1em;border:1px solid var(--gold-dim);color:var(--gold);background:rgba(201,168,76,0.06);}
+.pres-badge.active-badge{border-color:var(--green);color:var(--green);background:rgba(34,197,94,0.06);}
+
+/* RIGHT — stats column */
+.pres-stats{display:flex;flex-direction:column;gap:16px;min-width:160px;}
+.pres-stat{border-left:2px solid var(--gold-dim);padding-left:14px;}
+.pres-stat-val{font-family:var(--display);font-size:26px;color:var(--gold);line-height:1;}
+.pres-stat-lbl{font-family:var(--mono);font-size:10px;color:var(--text-dim);letter-spacing:0.1em;margin-top:2px;}
+
+/* ══════════════════════════════════════════
+   DECREE BOARD
+══════════════════════════════════════════ */
+.decree-section{padding:40px 48px;border-bottom:1px solid var(--border);background:#07090c;}
+.section-header{display:flex;align-items:center;gap:14px;margin-bottom:28px;}
+.section-bar{width:3px;height:24px;background:var(--gold);}
+.section-title{font-family:var(--display);font-size:22px;letter-spacing:0.18em;color:var(--gold);}
+.section-sub{font-family:var(--mono);font-size:11px;color:var(--text-dim);margin-left:auto;letter-spacing:0.1em;}
+.decree-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:20px;}
+.decree-card{
+  background:#0a0e13;
+  border:1px solid var(--border-bright);
+  padding:24px;
+  position:relative;
+  transition:border-color 0.2s,background 0.2s;
+}
+.decree-card:hover{background:#0d1219;border-color:rgba(201,168,76,0.55);}
+.decree-card::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:2px;
+  background:linear-gradient(90deg,var(--gold),rgba(201,168,76,0.3));
+}
+.decree-seal{
+  display:inline-flex;align-items:center;gap:8px;
+  font-family:var(--mono);font-size:10px;color:var(--gold-dim);
+  letter-spacing:0.15em;margin-bottom:12px;
+}
+.decree-seal-dot{width:6px;height:6px;border-radius:50%;background:var(--gold);animation:sealDotPulse 2s infinite;}
+@keyframes sealDotPulse{0%,100%{opacity:1;}50%{opacity:0.3;}}
+.decree-num{font-family:var(--mono);font-size:10px;color:var(--text-dim);margin-bottom:8px;letter-spacing:0.1em;}
+.decree-title{font-family:var(--display);font-size:18px;letter-spacing:0.1em;color:#fff;margin-bottom:10px;line-height:1.2;}
+.decree-body{font-size:13px;color:var(--text-dim);line-height:1.65;font-family:var(--mono);}
+.decree-footer{display:flex;justify-content:space-between;align-items:center;margin-top:16px;padding-top:12px;border-top:1px solid var(--border);}
+.decree-sig{font-family:var(--display);font-size:13px;color:var(--gold);letter-spacing:0.1em;}
+.decree-date{font-family:var(--mono);font-size:10px;color:var(--text-dim);}
+
+/* ══════════════════════════════════════════
+   CHAIN OF COMMAND
+══════════════════════════════════════════ */
+.chain-section{padding:40px 48px;border-bottom:1px solid var(--border);background:#060a0d;}
+.chain-tree{display:flex;flex-direction:column;align-items:center;gap:0;}
+.chain-node-wrap{display:flex;flex-direction:column;align-items:center;}
+.chain-connector{width:2px;height:32px;background:linear-gradient(to bottom,var(--gold),rgba(201,168,76,0.3));position:relative;}
+.chain-connector::after{content:'';position:absolute;bottom:-5px;left:50%;transform:translateX(-50%);width:7px;height:7px;border-right:2px solid rgba(201,168,76,0.5);border-bottom:2px solid rgba(201,168,76,0.5);transform:translateX(-50%) rotate(45deg);}
+.chain-node{
+  display:flex;align-items:center;gap:16px;
+  padding:14px 28px;border:1px solid var(--border-bright);background:#0a0f14;
+  position:relative;min-width:320px;transition:border-color 0.2s,background 0.2s;
+}
+.chain-node:hover{background:#0e1520;border-color:rgba(201,168,76,0.55);}
+.chain-node.pres-node{
+  min-width:380px;
+  border-color:var(--gold);background:#0d1008;
+  box-shadow:0 0 20px rgba(201,168,76,0.08),inset 0 0 20px rgba(201,168,76,0.03);
+}
+.chain-node.pres-node::before{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(201,168,76,0.04),transparent);pointer-events:none;}
+.chain-node-icon{
+  width:40px;height:40px;border:1px solid var(--gold-dim);
+  display:flex;align-items:center;justify-content:center;flex-shrink:0;
+  font-family:var(--display);font-size:14px;color:var(--gold);
+}
+.chain-node.pres-node .chain-node-icon{
+  border-color:var(--gold);width:48px;height:48px;font-size:18px;
+  background:rgba(201,168,76,0.06);
+}
+.chain-node-info{flex:1;}
+.chain-node-rank{font-family:var(--mono);font-size:10px;color:var(--text-dim);letter-spacing:0.15em;margin-bottom:3px;}
+.chain-node-name{font-family:var(--display);font-size:20px;letter-spacing:0.1em;color:var(--gold);line-height:1;}
+.chain-node.pres-node .chain-node-name{font-size:26px;}
+.chain-node-members{font-family:var(--mono);font-size:11px;color:var(--text-dim);margin-top:2px;}
+.chain-node-badge{font-family:var(--mono);font-size:10px;padding:3px 8px;border:1px solid var(--gold-dim);color:var(--gold);flex-shrink:0;}
+.chain-node.pres-node .chain-node-badge{border-color:var(--gold);background:rgba(201,168,76,0.08);}
+/* horizontal split for council */
+.chain-multi-row{display:flex;align-items:flex-start;gap:0;position:relative;}
+.chain-hbar{position:absolute;top:0;left:10%;width:80%;height:2px;background:linear-gradient(90deg,transparent,rgba(201,168,76,0.3),rgba(201,168,76,0.5),rgba(201,168,76,0.3),transparent);}
+.chain-multi-col{display:flex;flex-direction:column;align-items:center;flex:1;}
+.chain-multi-col .chain-connector{height:20px;}
+.chain-mini-node{
+  padding:10px 14px;border:1px solid var(--border);background:#0a0f14;
+  font-family:var(--mono);font-size:11px;color:var(--text);
+  text-align:center;min-width:120px;transition:border-color 0.2s;
+  margin:0 4px;
+}
+.chain-mini-node:hover{border-color:rgba(201,168,76,0.4);color:var(--gold);}
+.chain-mini-label{font-size:9px;color:var(--text-dim);letter-spacing:0.1em;margin-bottom:3px;}
+
+/* MAIN GRID */
+.main-grid{display:grid;grid-template-columns:360px 1fr;border-bottom:1px solid var(--border);}
+
+/* SIDEBAR */
+.sidebar{border-right:1px solid var(--border);overflow-y:auto;max-height:760px;}
+.panel-header{padding:16px 24px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;position:sticky;top:0;background:var(--bg);z-index:5;}
+.panel-header-line{width:3px;height:18px;background:var(--gold);flex-shrink:0;}
+.panel-title{font-family:var(--display);font-size:16px;letter-spacing:0.18em;color:var(--gold);}
+.rank-item{cursor:pointer;border-bottom:1px solid rgba(255,255,255,0.03);transition:background 0.15s;}
+.rank-item:hover{background:rgba(201,168,76,0.05);}
+.rank-item.active{background:rgba(201,168,76,0.07);}
+.rank-row{display:flex;align-items:center;padding:11px 24px;gap:12px;}
+.rank-num{font-family:var(--mono);font-size:10px;color:var(--text-dim);width:20px;flex-shrink:0;text-align:right;}
+.rank-pip{width:8px;height:8px;flex-shrink:0;}
+.rank-name{font-size:13px;font-weight:500;color:var(--text);flex:1;line-height:1.3;}
+.rank-count{font-family:var(--mono);font-size:11px;color:var(--text-dim);padding:2px 7px;border:1px solid rgba(255,255,255,0.1);border-radius:3px;flex-shrink:0;}
+.rank-item.top .rank-name{color:var(--gold);}
+.rank-item.top .rank-count{border-color:rgba(201,168,76,0.3);color:var(--gold);}
+.rank-item.classified .rank-name{color:var(--red);font-family:var(--mono);font-size:11px;letter-spacing:0.08em;}
+.rank-members{display:none;padding:4px 24px 12px 56px;flex-wrap:wrap;gap:4px;}
+.rank-item.active .rank-members{display:flex;}
+.member-tag{font-family:var(--mono);font-size:11px;color:var(--green);background:rgba(34,197,94,0.07);border:1px solid rgba(34,197,94,0.18);padding:3px 8px;border-radius:2px;animation:tagIn 0.2s ease backwards;}
+@keyframes tagIn{from{opacity:0;transform:translateY(-3px);}to{opacity:1;transform:translateY(0);}}
+.rank-item.top .member-tag{color:var(--gold);background:rgba(201,168,76,0.07);border-color:rgba(201,168,76,0.2);}
+/* PRESIDENT tag extra glow on hover */
+.rank-item.pres-rank .member-tag{
+  font-size:12px;padding:4px 12px;
+  transition:box-shadow 0.25s ease,color 0.25s ease;
+}
+.rank-item.pres-rank .member-tag:hover{
+  box-shadow:0 0 8px rgba(201,168,76,0.45),0 0 18px rgba(201,168,76,0.2);
+  color:#ffe08a;border-color:rgba(201,168,76,0.5);
+}
+.classified-error{display:none;padding:6px 24px 12px 56px;}
+.rank-item.classified.show-err .classified-error{display:block;}
+.err-blink{font-family:var(--mono);font-size:12px;color:var(--red);letter-spacing:0.1em;animation:errBlink 0.55s step-start infinite;}
+@keyframes errBlink{0%,100%{opacity:1;}50%{opacity:0;}}
+.err-sub{font-family:var(--mono);font-size:11px;color:var(--text-dim);margin-top:5px;line-height:1.5;}
+.feed-panel{border-top:1px solid var(--border);}
+.feed-list{padding:8px 0;overflow:hidden;}
+.feed-entry{display:flex;align-items:flex-start;gap:10px;padding:8px 24px;border-bottom:1px solid rgba(255,255,255,0.03);animation:slideIn 0.3s ease;}
+@keyframes slideIn{from{opacity:0;transform:translateX(-6px);}to{opacity:1;transform:translateX(0);}}
+.feed-time{font-family:var(--mono);font-size:11px;color:var(--text-dim);flex-shrink:0;margin-top:2px;}
+.feed-dot{width:6px;height:6px;border-radius:50%;background:var(--green);flex-shrink:0;margin-top:5px;}
+.feed-dot.red{background:var(--red);}
+.feed-dot.gold{background:var(--gold);}
+.feed-text{font-size:12px;color:var(--text);font-family:var(--mono);line-height:1.5;}
+.globe-panel{position:relative;background:#020608;display:flex;align-items:center;justify-content:center;overflow:hidden;min-height:760px;}
+#globe-canvas{display:block;}
+.globe-hud{position:absolute;top:16px;left:20px;font-family:var(--mono);font-size:11px;color:rgba(0,200,255,0.5);letter-spacing:0.15em;line-height:1.8;}
+.globe-legend{position:absolute;top:16px;right:16px;background:rgba(2,6,8,0.85);border:1px solid rgba(0,200,255,0.15);padding:12px 16px;font-family:var(--mono);font-size:12px;}
+.legend-item{display:flex;align-items:center;gap:8px;margin:4px 0;color:var(--text);}
+.legend-dot{width:7px;height:7px;border-radius:50%;}
+.globe-scan{position:absolute;inset:0;pointer-events:none;background:repeating-linear-gradient(0deg,transparent,transparent 3px,rgba(0,200,255,0.012) 3px,rgba(0,200,255,0.012) 4px);}
+footer{padding:20px 32px;border-top:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;font-family:var(--mono);font-size:11px;color:var(--text-dim);}
 </style>
 </head>
-
 <body>
 
 <!-- BOOT -->
 <div id="boot">
-    <div class="boot-text">INITIALIZING VALOR COMMAND SYSTEM...</div>
-    <div class="boot-text">VERIFYING CLEARANCE LEVEL...</div>
-    <div class="boot-text">ACCESS GRANTED</div>
+  <div class="boot-logo">VALOR</div>
+  <div class="boot-line">[ SYS ] Initializing VALOR Command System v4.1</div>
+  <div class="boot-line">[ NET ] Establishing encrypted uplink...</div>
+  <div class="boot-line">[ SEC ] Verifying biometric clearance...</div>
+  <div class="boot-line">[ OK  ] Access granted — Welcome, Operator</div>
+  <div class="boot-line">CLEARANCE LEVEL: ALPHA-7</div>
+  <div class="boot-bar-wrap"><div class="boot-bar"></div></div>
 </div>
 
+<!-- HEADER -->
 <header>
-    <div class="logo">[VALOR] COMMAND CENTER</div>
-    <div class="status">SYSTEM ONLINE</div>
+  <div class="header-left">
+    <div class="valor-badge"><span>V</span></div>
+    <div>
+      <div class="header-title">VALOR COMMAND</div>
+      <div class="header-sub">Varkonian Armada Land Operations Regiment</div>
+    </div>
+  </div>
+  <div class="header-right">
+    <div class="status-dot">SYSTEM ONLINE</div>
+    <div class="clearance-badge">ALPHA-7 CLEARANCE</div>
+  </div>
 </header>
 
-<!-- INTRO -->
-<div class="section">
-<div class="title">[VALOR] – Varkonian Armada Land Operations Regiment 🪖</div>
-
-<p>"Silent. Surgical. Certain."</p>
-
-<pre style="color:#9ca3af; white-space:pre-wrap;">
-Born from elite Special Forces & defense experts, VALOR is a Private Military Company specializing in rapid global deployment, precision urban warfare, and surgical strike operations. We don’t just fight — we dominate.
-
-🌍 Current Operations:
-• Blackhawk Rescue Mission 5 — Deployed as international rapid response ops
-• Examination — NSA-authorized containment operations in Menlo
-
-🎖 Promotion Protocol:
-Earned through discipline, combat results & leadership
-Authorized by Armada Council
-</pre>
-
-<a class="enlist" href="https://www.roblox.com/communities/1098707/VALOR-Varkonian-Armada-Land-Operations-Regiment#!/about" target="_blank">
-ENLIST NOW
-</a>
+<!-- STATS -->
+<div class="stats-bar">
+  <div class="stat-cell">
+    <div class="stat-label">Total Personnel</div>
+    <div class="stat-value green">26</div>
+    <div class="stat-sub">Across all ranks</div>
+  </div>
+  <div class="stat-cell">
+    <div class="stat-label">High Command</div>
+    <div class="stat-value gold">7</div>
+    <div class="stat-sub">Council &amp; above</div>
+  </div>
+  <div class="stat-cell">
+    <div class="stat-label">Active Operations</div>
+    <div class="stat-value red">2</div>
+    <div class="stat-sub">Ongoing missions</div>
+  </div>
+  <div class="stat-cell">
+    <div class="stat-label">Intel Events</div>
+    <div class="stat-value" id="stat-events">0</div>
+    <div class="stat-sub">Live feed count</div>
+  </div>
 </div>
 
-<!-- RANKS -->
-<div class="section">
-<div class="title">Rank Structure</div>
+<!-- ══ PRESIDENTIAL COMMAND SUITE ══ -->
+<div class="pres-suite">
+  <div class="pres-suite-bg"></div>
+  <div class="pres-suite-grid"></div>
+  <div class="pres-corner tl"></div>
+  <div class="pres-corner tr"></div>
+  <div class="pres-corner bl"></div>
+  <div class="pres-corner br"></div>
+  <div class="pres-inner">
+    <!-- SEAL -->
+    <div class="pres-seal">
+      <div class="pres-seal-ring2"></div>
+      <div class="pres-seal-ring"></div>
+      <div class="pres-seal-roman">IX</div>
+      <div class="pres-seal-label">COMMAND</div>
+    </div>
+    <!-- INFO -->
+    <div>
+      <div class="pres-rank-tag">// VALOR PMC — SUPREME COMMANDER //</div>
+      <div class="pres-name">Itz4z</div>
+      <div class="pres-title">President of VALOR PMC</div>
+      <div class="pres-badges">
+        <div class="pres-badge active-badge">ACTIVE</div>
+        <div class="pres-badge">RANK IX</div>
+        <div class="pres-badge">ALPHA-7 CLEARANCE</div>
+        <div class="pres-badge">SUPREME AUTHORITY</div>
+      </div>
+    </div>
+    <!-- STATS -->
+    <div class="pres-stats">
+      <div class="pres-stat">
+        <div class="pres-stat-val">26</div>
+        <div class="pres-stat-lbl">PERSONNEL UNDER COMMAND</div>
+      </div>
+      <div class="pres-stat">
+        <div class="pres-stat-val">2</div>
+        <div class="pres-stat-lbl">ACTIVE OPERATIONS</div>
+      </div>
+      <div class="pres-stat">
+        <div class="pres-stat-val">IX</div>
+        <div class="pres-stat-lbl">HIGHEST RANK</div>
+      </div>
+    </div>
+  </div>
+</div>
 
-<div class="panel">
-<p>9 Operator</p>
-<p>5 Field Operative</p>
-<p>[CLASSIFIED] Special Operations Unit</p>
-<p>Valor Assault Officer</p>
-<p>Security Enforcement Supervisor</p>
-<p>Warfare Operations Command</p>
-<p>Armada Council</p>
-<p>Chief of Valor</p>
-<p>Varkonian President</p>
-</div>
+<!-- ══ DECREE BOARD ══ -->
+<div class="decree-section">
+  <div class="section-header">
+    <div class="section-bar"></div>
+    <div class="section-title">PRESIDENTIAL DECREE BOARD</div>
+    <div class="section-sub">// ISSUED BY VALOR PMC PRESIDENT — ITZ4Z //</div>
+  </div>
+  <div class="decree-grid">
+
+    <div class="decree-card">
+      <div class="decree-seal"><div class="decree-seal-dot"></div>OFFICIAL DECREE</div>
+      <div class="decree-num">DECREE № 001 — STANDING ORDER</div>
+      <div class="decree-title">All Units Maintain Formation</div>
+      <div class="decree-body">By direct order of the VALOR PMC President, all deployed units are to hold their assigned grid positions until further command is issued. No unsanctioned movement permitted.</div>
+      <div class="decree-footer">
+        <div class="decree-sig">— Itz4z</div>
+        <div class="decree-date">STANDING ORDER</div>
+      </div>
+    </div>
+
+    <div class="decree-card">
+      <div class="decree-seal"><div class="decree-seal-dot"></div>OFFICIAL DECREE</div>
+      <div class="decree-num">DECREE № 002 — OPERATIONAL</div>
+      <div class="decree-title">Op. Blackhawk — Full Commitment</div>
+      <div class="decree-body">All available Field Operatives and above are hereby committed to Blackhawk Rescue Mission 5. Prioritize asset extraction. Chain of command authority delegated to Warfare Operations Command on-site.</div>
+      <div class="decree-footer">
+        <div class="decree-sig">— Itz4z</div>
+        <div class="decree-date">ACTIVE</div>
+      </div>
+    </div>
+
+    <div class="decree-card">
+      <div class="decree-seal"><div class="decree-seal-dot"></div>OFFICIAL DECREE</div>
+      <div class="decree-num">DECREE № 003 — PERSONNEL</div>
+      <div class="decree-title">Promotion Protocol Active</div>
+      <div class="decree-body">Advancement within VALOR PMC is earned through demonstrated discipline, combat performance, and leadership. All promotions require Armada Council review and Presidential ratification.</div>
+      <div class="decree-footer">
+        <div class="decree-sig">— Itz4z</div>
+        <div class="decree-date">PERMANENT POLICY</div>
+      </div>
+    </div>
+
+  </div>
 </div>
 
-<!-- LIVE FEED -->
-<div class="section">
-<div class="title">Live Intel Feed</div>
-<div class="panel" id="feed"></div>
+<!-- ══ CHAIN OF COMMAND ══ -->
+<div class="chain-section">
+  <div class="section-header" style="margin-bottom:36px;">
+    <div class="section-bar"></div>
+    <div class="section-title">CHAIN OF COMMAND</div>
+    <div class="section-sub">// VALOR PMC — COMMAND HIERARCHY //</div>
+  </div>
+  <div class="chain-tree">
+
+    <!-- PRESIDENT -->
+    <div class="chain-node-wrap">
+      <div class="chain-node pres-node">
+        <div class="chain-node-icon">IX</div>
+        <div class="chain-node-info">
+          <div class="chain-node-rank">SUPREME COMMANDER — VALOR PMC PRESIDENT</div>
+          <div class="chain-node-name">Itz4z</div>
+          <div class="chain-node-members">Full executive authority over all VALOR operations</div>
+        </div>
+        <div class="chain-node-badge">RANK IX</div>
+      </div>
+    </div>
+
+    <div class="chain-connector"></div>
+
+    <!-- CHIEF -->
+    <div class="chain-node-wrap">
+      <div class="chain-node">
+        <div class="chain-node-icon">VIII</div>
+        <div class="chain-node-info">
+          <div class="chain-node-rank">CHIEF OF VALOR</div>
+          <div class="chain-node-name">finnaly_gone</div>
+          <div class="chain-node-members">Second in command — direct presidential liaison</div>
+        </div>
+        <div class="chain-node-badge">RANK VIII</div>
+      </div>
+    </div>
+
+    <div class="chain-connector"></div>
+
+    <!-- COUNCIL — horizontal -->
+    <div style="position:relative;width:100%;display:flex;flex-direction:column;align-items:center;">
+      <div style="font-family:var(--mono);font-size:10px;color:var(--text-dim);letter-spacing:0.2em;margin-bottom:12px;">ARMADA COUNCIL — RANK VII</div>
+      <div style="position:relative;width:90%;display:flex;justify-content:center;align-items:flex-start;">
+        <div style="position:absolute;top:0;left:5%;right:5%;height:1px;background:linear-gradient(90deg,transparent,rgba(201,168,76,0.4),rgba(201,168,76,0.4),transparent);"></div>
+        <div class="chain-multi-row" style="width:100%;justify-content:center;">
+          <div class="chain-multi-col">
+            <div class="chain-connector" style="height:16px;"></div>
+            <div class="chain-mini-node"><div class="chain-mini-label">COUNCIL</div>wolfkiller200718</div>
+          </div>
+          <div class="chain-multi-col">
+            <div class="chain-connector" style="height:16px;"></div>
+            <div class="chain-mini-node"><div class="chain-mini-label">COUNCIL</div>opgggun</div>
+          </div>
+          <div class="chain-multi-col">
+            <div class="chain-connector" style="height:16px;"></div>
+            <div class="chain-mini-node"><div class="chain-mini-label">COUNCIL</div>ViperDouble</div>
+          </div>
+          <div class="chain-multi-col">
+            <div class="chain-connector" style="height:16px;"></div>
+            <div class="chain-mini-node"><div class="chain-mini-label">COUNCIL</div>MythTercios</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="chain-connector"></div>
+
+    <!-- WOC -->
+    <div class="chain-node-wrap">
+      <div class="chain-node">
+        <div class="chain-node-icon">VI</div>
+        <div class="chain-node-info">
+          <div class="chain-node-rank">WARFARE OPERATIONS COMMAND</div>
+          <div class="chain-node-name" style="font-size:16px;">Superhrdina54 &amp; Edirulz1608</div>
+          <div class="chain-node-members">Field command authority — direct unit leadership</div>
+        </div>
+        <div class="chain-node-badge">RANK VI</div>
+      </div>
+    </div>
+
+    <div class="chain-connector"></div>
+
+    <!-- Lower ranks summary -->
+    <div style="display:flex;gap:12px;flex-wrap:wrap;justify-content:center;max-width:700px;">
+      <div class="chain-mini-node" style="min-width:160px;">
+        <div class="chain-mini-label">SEC. ENFORCEMENT SUPERVISOR — V</div>
+        M.I.A
+      </div>
+      <div class="chain-mini-node" style="min-width:160px;">
+        <div class="chain-mini-label">VALOR ASSAULT OFFICER — IV</div>
+        wristY61
+      </div>
+      <div class="chain-mini-node" style="min-width:160px;">
+        <div class="chain-mini-label">SPECIAL OPS — III</div>
+        <span style="color:var(--red);">[CLASSIFIED]</span>
+      </div>
+      <div class="chain-mini-node" style="min-width:160px;">
+        <div class="chain-mini-label">FIELD OPERATIVE — II (×6)</div>
+        Enlisted
+      </div>
+      <div class="chain-mini-node" style="min-width:160px;">
+        <div class="chain-mini-label">OPERATOR — I (×10)</div>
+        Enlisted
+      </div>
+    </div>
+
+  </div>
 </div>
 
-<!-- MAP -->
-<div class="section">
-<div class="title">Tactical Operations Map</div>
-<div id="map"></div>
+<!-- HERO -->
+<div class="hero">
+  <div class="hero-bg"></div>
+  <div class="hero-grid"></div>
+  <div class="hero-tag">// COMPANY OVERVIEW // CLASSIFIED</div>
+  <div class="hero-title"><span>VALOR</span> PMC</div>
+  <div class="hero-tagline">"Silent. Surgical. Certain."</div>
+  <div class="hero-body">Born from elite Special Forces and defense experts, VALOR is a Private Military Company specializing in rapid global deployment, precision urban warfare, and surgical strike operations. We don't just fight — we dominate.</div>
+  <div class="ops-row">
+    <div class="ops-tag">OP: BLACKHAWK RESCUE MISSION 5</div>
+    <div class="ops-tag">OP: EXAMINATION — MENLO SECTOR</div>
+  </div>
+  <a class="enlist-btn" href="https://www.roblox.com/communities/1098707/VALOR-Varkonian-Armada-Land-Operations-Regiment#!/about" target="_blank">ENLIST NOW →</a>
 </div>
+
+<!-- MAIN GRID -->
+<div class="main-grid">
+  <div class="sidebar">
+    <div class="panel-header">
+      <div class="panel-header-line"></div>
+      <div class="panel-title">RANK STRUCTURE</div>
+    </div>
+
+    <div class="rank-item top pres-rank">
+      <div class="rank-row">
+        <div class="rank-num">IX</div>
+        <svg class="rank-pip" viewBox="0 0 8 8"><polygon points="4,0 8,8 0,8" fill="#c9a84c"/></svg>
+        <div class="rank-name">Varkonian President</div>
+        <div class="rank-count">1</div>
+      </div>
+      <div class="rank-members"><span class="member-tag">Itz4z</span></div>
+    </div>
+
+    <div class="rank-item top">
+      <div class="rank-row">
+        <div class="rank-num">VIII</div>
+        <svg class="rank-pip" viewBox="0 0 8 8"><polygon points="4,0 8,8 0,8" fill="#c9a84c"/></svg>
+        <div class="rank-name">Chief of Valor</div>
+        <div class="rank-count">1</div>
+      </div>
+      <div class="rank-members"><span class="member-tag">finnaly_gone</span></div>
+    </div>
+
+    <div class="rank-item top">
+      <div class="rank-row">
+        <div class="rank-num">VII</div>
+        <svg class="rank-pip" viewBox="0 0 8 8"><rect width="8" height="8" fill="#c9a84c" transform="rotate(45 4 4)"/></svg>
+        <div class="rank-name">Armada Council</div>
+        <div class="rank-count">4</div>
+      </div>
+      <div class="rank-members">
+        <span class="member-tag" style="animation-delay:0.00s">wolfkiller200718</span>
+        <span class="member-tag" style="animation-delay:0.05s">opgggun</span>
+        <span class="member-tag" style="animation-delay:0.10s">ViperDouble</span>
+        <span class="member-tag" style="animation-delay:0.15s">MythTercios</span>
+      </div>
+    </div>
+
+    <div class="rank-item">
+      <div class="rank-row">
+        <div class="rank-num">VI</div>
+        <svg class="rank-pip" viewBox="0 0 8 8"><rect width="8" height="8" fill="#6b7280"/></svg>
+        <div class="rank-name">Warfare Operations Command</div>
+        <div class="rank-count">2</div>
+      </div>
+      <div class="rank-members">
+        <span class="member-tag" style="animation-delay:0.00s">Superhrdina54</span>
+        <span class="member-tag" style="animation-delay:0.05s">Edirulz1608</span>
+      </div>
+    </div>
+
+    <div class="rank-item">
+      <div class="rank-row">
+        <div class="rank-num">V</div>
+        <svg class="rank-pip" viewBox="0 0 8 8"><rect width="8" height="8" fill="#6b7280"/></svg>
+        <div class="rank-name">Security Enforcement Supervisor</div>
+        <div class="rank-count">1</div>
+      </div>
+      <div class="rank-members"><span class="member-tag">M.I.A</span></div>
+    </div>
+
+    <div class="rank-item">
+      <div class="rank-row">
+        <div class="rank-num">IV</div>
+        <svg class="rank-pip" viewBox="0 0 8 8"><rect width="8" height="8" fill="#6b7280"/></svg>
+        <div class="rank-name">Valor Assault Officer</div>
+        <div class="rank-count">1</div>
+      </div>
+      <div class="rank-members"><span class="member-tag">wristY61</span></div>
+    </div>
+
+    <div class="rank-item classified">
+      <div class="rank-row">
+        <div class="rank-num">III</div>
+        <svg class="rank-pip" viewBox="0 0 8 8"><rect width="8" height="8" fill="#ef4444"/></svg>
+        <div class="rank-name">[CLASSIFIED] Special Operations Unit</div>
+        <div class="rank-count" style="border-color:rgba(239,68,68,0.3);color:var(--red)">?</div>
+      </div>
+      <div class="classified-error">
+        <div class="err-blink">ERR-403 // ACCESS DENIED</div>
+        <div class="err-sub">Personnel data is encrypted.<br>Armada Council authorization required.</div>
+      </div>
+    </div>
+
+    <div class="rank-item">
+      <div class="rank-row">
+        <div class="rank-num">II</div>
+        <svg class="rank-pip" viewBox="0 0 8 8"><circle cx="4" cy="4" r="4" fill="#4b5563"/></svg>
+        <div class="rank-name">Field Operative</div>
+        <div class="rank-count">6</div>
+      </div>
+      <div class="rank-members">
+        <span class="member-tag" style="animation-delay:0.00s">2rd007</span>
+        <span class="member-tag" style="animation-delay:0.05s">Quavo</span>
+        <span class="member-tag" style="animation-delay:0.10s">AaronThePlumber</span>
+        <span class="member-tag" style="animation-delay:0.15s">Drac0_04</span>
+        <span class="member-tag" style="animation-delay:0.20s">Marshall_zuckov</span>
+        <span class="member-tag" style="animation-delay:0.25s">Optimus_prime7636</span>
+      </div>
+    </div>
+
+    <div class="rank-item">
+      <div class="rank-row">
+        <div class="rank-num">I</div>
+        <svg class="rank-pip" viewBox="0 0 8 8"><circle cx="4" cy="4" r="4" fill="#374151"/></svg>
+        <div class="rank-name">Operator</div>
+        <div class="rank-count">10</div>
+      </div>
+      <div class="rank-members">
+        <span class="member-tag" style="animation-delay:0.00s">XDGAMING762123</span>
+        <span class="member-tag" style="animation-delay:0.05s">bartekpankaknumer2</span>
+        <span class="member-tag" style="animation-delay:0.10s">valorfrags</span>
+        <span class="member-tag" style="animation-delay:0.15s">YusuffReyizz</span>
+        <span class="member-tag" style="animation-delay:0.20s">UnicornB3a2015</span>
+        <span class="member-tag" style="animation-delay:0.25s">omulsupre</span>
+        <span class="member-tag" style="animation-delay:0.30s">MJ_smp</span>
+        <span class="member-tag" style="animation-delay:0.35s">Nub_Nebss</span>
+        <span class="member-tag" style="animation-delay:0.40s">idrinkpologpee</span>
+        <span class="member-tag" style="animation-delay:0.45s">basmalalolz</span>
+      </div>
+    </div>
+
+    <div class="feed-panel">
+      <div class="panel-header" style="position:relative;">
+        <div class="panel-header-line" style="background:var(--green)"></div>
+        <div class="panel-title" style="color:var(--green)">LIVE INTEL FEED</div>
+      </div>
+      <div class="feed-list" id="feed"></div>
+    </div>
+  </div>
+
+  <!-- GLOBE -->
+  <div class="globe-panel" id="globe-panel">
+    <div class="globe-scan"></div>
+    <canvas id="globe-canvas"></canvas>
+    <div class="globe-hud">
+      TACTICAL OPERATIONS MAP<br>
+      GLOBAL // LIVE TRACKING<br>
+      <span id="unit-counter" style="color:rgba(34,197,94,0.6)">UNITS: —</span>
+    </div>
+    <div class="globe-legend">
+      <div class="legend-item"><div class="legend-dot" style="background:#22c55e"></div>Friendly Unit</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#ef4444"></div>Hostile Contact</div>
+    </div>
+  </div>
+</div>
+
+<footer>
+  <div>VALOR PMC // VARKONIAN ARMADA LAND OPERATIONS REGIMENT</div>
+  <div id="clock"></div>
+</footer>
 
 <script>
-
 /* BOOT */
-setTimeout(()=>{
-    document.getElementById("boot").style.display="none";
-},2500);
+setTimeout(() => {
+  const b = document.getElementById('boot');
+  b.classList.add('fade');
+  setTimeout(() => b.remove(), 700);
+}, 2800);
 
-/* MAP INIT (REAL WORLD MAP) */
-const map = L.map('map').setView([59.9139, 10.7522], 3); // Oslo center
-
-L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    attribution: '&copy; OpenStreetMap'
-}).addTo(map);
-
-/* DYNAMIC UNITS */
-function createUnit(type){
-
-    const lat = (Math.random()*140)-70;
-    const lng = (Math.random()*360)-180;
-
-    const speed = Math.random()*0.0008 + 0.0002; // different speeds
-
-    const color = type === "green" ? "green" : "red";
-
-    const marker = L.circleMarker([lat,lng],{
-        radius:6,
-        color:color,
-        fillColor:color,
-        fillOpacity:1
-    }).addTo(map);
-
-    function move(){
-        const pos = marker.getLatLng();
-        marker.setLatLng([
-            pos.lat + (Math.random()-0.5)*speed*10,
-            pos.lng + (Math.random()-0.5)*speed*10
-        ]);
-    }
-
-    setInterval(move, 1000 + Math.random()*2000);
+/* CLOCK */
+function updateClock() {
+  document.getElementById('clock').textContent = 'UTC ' + new Date().toISOString().slice(11,19) + ' // ENCRYPTED CHANNEL';
 }
+updateClock(); setInterval(updateClock, 1000);
 
-/* SPAWN UNITS */
-for(let i=0;i<18;i++) createUnit("green");
-for(let i=0;i<10;i++) createUnit("red");
+/* RANK CLICK */
+document.querySelectorAll('.rank-item').forEach(item => {
+  item.addEventListener('click', () => {
+    if (item.classList.contains('classified')) { item.classList.toggle('show-err'); return; }
+    const wasActive = item.classList.contains('active');
+    document.querySelectorAll('.rank-item').forEach(r => r.classList.remove('active','show-err'));
+    if (!wasActive) item.classList.add('active');
+  });
+});
 
-/* FEED */
-const feed = document.getElementById("feed");
+/* HOLOGRAPHIC GLOBE */
+(function() {
+  const canvas = document.getElementById('globe-canvas');
+  const panel = document.getElementById('globe-panel');
+  const renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: true });
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  const scene = new THREE.Scene();
+  const camera = new THREE.PerspectiveCamera(42, 1, 0.1, 100);
+  camera.position.z = 3.0;
+  function resize() {
+    const w = panel.clientWidth, h = Math.max(panel.clientHeight, 760);
+    renderer.setSize(w, h); camera.aspect = w/h; camera.updateProjectionMatrix();
+  }
+  const BLUE=0x00c8ff, GREEN=0x22c55e, RED=0xef4444;
+  const wfGeo = new THREE.SphereGeometry(1,36,22);
+  const globe = new THREE.Mesh(wfGeo, new THREE.MeshBasicMaterial({color:BLUE,wireframe:true,transparent:true,opacity:0.10}));
+  scene.add(globe);
+  const innerMesh = new THREE.Mesh(new THREE.SphereGeometry(0.97,32,20), new THREE.MeshBasicMaterial({color:0x001520,transparent:true,opacity:0.75,side:THREE.BackSide}));
+  scene.add(innerMesh);
+  function addRing(pts,color,opacity){const g=new THREE.BufferGeometry().setFromPoints(pts);scene.add(new THREE.Line(g,new THREE.LineBasicMaterial({color,transparent:true,opacity})));}
+  function circlePts(r,seg){const p=[];for(let i=0;i<=seg;i++){const a=(i/seg)*Math.PI*2;p.push(new THREE.Vector3(Math.cos(a)*r,0,Math.sin(a)*r));}return p;}
+  addRing(circlePts(1.01,128),BLUE,0.45);
+  const pmPts=[];for(let i=0;i<=128;i++){const a=(i/128)*Math.PI*2;pmPts.push(new THREE.Vector3(0,Math.cos(a)*1.01,Math.sin(a)*1.01));}addRing(pmPts,BLUE,0.3);
+  for(let lat=-60;lat<=60;lat+=30){if(lat===0)continue;const r=Math.cos(lat*Math.PI/180)*1.01,y=Math.sin(lat*Math.PI/180)*1.01;const p=[];for(let i=0;i<=64;i++){const a=(i/64)*Math.PI*2;p.push(new THREE.Vector3(Math.cos(a)*r,y,Math.sin(a)*r));}addRing(p,BLUE,0.1);}
+  const op=[];for(let i=0;i<=128;i++){const a=(i/128)*Math.PI*2;op.push(new THREE.Vector3(Math.cos(a),Math.sin(a),0));}
+  [[1.05,0.30],[1.10,0.14],[1.17,0.06],[1.26,0.03]].forEach(([s,o])=>{const g=new THREE.BufferGeometry().setFromPoints(op.map(p=>p.clone().multiplyScalar(s)));scene.add(new THREE.Line(g,new THREE.LineBasicMaterial({color:BLUE,transparent:true,opacity:o})));});
+  for(let lng=0;lng<360;lng+=45){const p=[],theta=lng*Math.PI/180;for(let i=0;i<=32;i++){const phi=(i/32)*Math.PI;p.push(new THREE.Vector3(Math.sin(phi)*Math.cos(theta)*1.01,Math.cos(phi)*1.01,Math.sin(phi)*Math.sin(theta)*1.01));}addRing(p,BLUE,0.07);}
+  function ll3d(lat,lng,r){const phi=(90-lat)*Math.PI/180,theta=(lng+180)*Math.PI/180;return new THREE.Vector3(-r*Math.sin(phi)*Math.cos(theta),r*Math.cos(phi),r*Math.sin(phi)*Math.sin(theta));}
+  const dotGeo=new THREE.SphereGeometry(0.022,8,8),ringGeo=new THREE.RingGeometry(0.026,0.042,12);
+  function spawnDot(lat,lng,color){
+    const dot=new THREE.Mesh(dotGeo,new THREE.MeshBasicMaterial({color,transparent:true,opacity:0.95}));
+    const pos=ll3d(lat,lng,1.02); dot.position.copy(pos); scene.add(dot);
+    const rMat=new THREE.MeshBasicMaterial({color,transparent:true,opacity:0.5,side:THREE.DoubleSide});
+    const ring=new THREE.Mesh(ringGeo,rMat); ring.position.copy(pos); ring.lookAt(new THREE.Vector3(0,0,0)); scene.add(ring);
+    let sc=1+Math.random(),growing=Math.random()>0.5;
+    setTimeout(function a(){if(growing){sc+=0.02;if(sc>2.5)growing=false;}else{sc-=0.02;if(sc<1){growing=true;sc=1;}}ring.scale.setScalar(sc);rMat.opacity=0.45*Math.max(0,1-(sc-1)/1.5);requestAnimationFrame(a);},Math.random()*2500);
+  }
+  const gc=Math.floor(Math.random()*15)+12,rc=Math.floor(Math.random()*8)+8;
+  for(let i=0;i<gc;i++) spawnDot((Math.random()*140)-70,(Math.random()*340)-170,GREEN);
+  for(let i=0;i<rc;i++) spawnDot((Math.random()*140)-70,(Math.random()*340)-170,RED);
+  document.getElementById('unit-counter').textContent='FRIENDLY: '+gc+'  //  HOSTILE: '+rc;
+  const pv=[];for(let i=0;i<400;i++){const r=1.35+Math.random()*0.9,phi=Math.random()*Math.PI*2,theta=Math.random()*Math.PI;pv.push(r*Math.sin(theta)*Math.cos(phi),r*Math.cos(theta),r*Math.sin(theta)*Math.sin(phi));}
+  const pGeo=new THREE.BufferGeometry();pGeo.setAttribute('position',new THREE.Float32BufferAttribute(pv,3));
+  scene.add(new THREE.Points(pGeo,new THREE.PointsMaterial({color:BLUE,size:0.01,transparent:true,opacity:0.25})));
+  scene.add(new THREE.AmbientLight(0xffffff,1));
+  resize(); window.addEventListener('resize',resize);
+  let rotY=0,dragging=false,lastX=0;
+  canvas.addEventListener('mousedown',e=>{dragging=true;lastX=e.clientX;});
+  window.addEventListener('mouseup',()=>{dragging=false;});
+  canvas.addEventListener('mousemove',e=>{if(dragging){rotY+=(e.clientX-lastX)*0.005;lastX=e.clientX;}});
+  (function animate(){requestAnimationFrame(animate);if(!dragging)rotY+=0.0025;globe.rotation.y=rotY;innerMesh.rotation.y=rotY;renderer.render(scene,camera);})();
+})();
 
-const events = [
-"Unit deployed to Ronograd",
-"Hostile contact detected",
-"Drone surveillance active",
-"Extraction window opening",
-"Sector stabilized"
+/* LIVE FEED */
+const feed=document.getElementById('feed'); let eventCount=0;
+const events=[
+  {text:'Unit deployed to Ronograd sector',type:'green'},
+  {text:'Hostile contact detected — grid 7X',type:'red'},
+  {text:'Drone surveillance uplink active',type:'gold'},
+  {text:'Extraction window opening — T-minus 4min',type:'gold'},
+  {text:'Sector 12 stabilized, ops nominal',type:'green'},
+  {text:'Command relay established — secure',type:'green'},
+  {text:'Asset relocated — new vector confirmed',type:'gold'},
+  {text:'Enemy formation spotted — northern ridge',type:'red'},
 ];
-
-setInterval(()=>{
-    const p = document.createElement("p");
-    p.textContent = `[${new Date().toLocaleTimeString()}] ${events[Math.floor(Math.random()*events.length)]}`;
-
-    feed.prepend(p);
-    if(feed.children.length>10) feed.removeChild(feed.lastChild);
-
-},2000);
-
+function addFeedEntry(){
+  const ev=events[Math.floor(Math.random()*events.length)];
+  const now=new Date().toTimeString().slice(0,8);
+  const e2=document.createElement('div'); e2.className='feed-entry';
+  e2.innerHTML=`<div class="feed-time">${now}</div><div class="feed-dot ${ev.type}"></div><div class="feed-text">${ev.text}</div>`;
+  feed.prepend(e2); if(feed.children.length>8) feed.removeChild(feed.lastChild);
+  document.getElementById('stat-events').textContent=++eventCount;
+}
+setInterval(addFeedEntry,2200); addFeedEntry();
 </script>
-
 </body>
 </html>
