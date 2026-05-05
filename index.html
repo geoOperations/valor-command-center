@@ -2,12 +2,43 @@
 <html>
 <head>
     <title>VALOR Command Center</title>
+
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;800&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+
     <style>
         body {
             margin: 0;
-            font-family: Arial;
+            font-family: 'Share Tech Mono', monospace;
             background: #05070a;
             color: #e5e7eb;
+            overflow: hidden;
+        }
+
+        /* BOOT SCREEN */
+        #boot {
+            position: fixed;
+            width: 100%;
+            height: 100%;
+            background: black;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            font-family: 'Orbitron', sans-serif;
+            z-index: 9999;
+        }
+
+        .boot-text {
+            color: #22c55e;
+            font-size: 18px;
+            letter-spacing: 2px;
+            animation: blink 1s infinite;
+        }
+
+        @keyframes blink {
+            0% { opacity: 1; }
+            50% { opacity: 0.2; }
+            100% { opacity: 1; }
         }
 
         header {
@@ -16,11 +47,12 @@
             border-bottom: 1px solid #1f2937;
             display: flex;
             justify-content: space-between;
+            font-family: 'Orbitron', sans-serif;
         }
 
         .logo {
             color: #facc15;
-            font-weight: bold;
+            font-weight: 800;
             letter-spacing: 2px;
         }
 
@@ -29,17 +61,38 @@
             animation: blink 1.5s infinite;
         }
 
-        @keyframes blink {
-            0% { opacity: 1; }
-            50% { opacity: 0.3; }
-            100% { opacity: 1; }
+        .nav {
+            display: flex;
+            background: #0f172a;
+            border-bottom: 1px solid #1f2937;
         }
 
-        .container {
+        .nav button {
+            flex: 1;
+            padding: 15px;
+            background: none;
+            border: none;
+            color: #9ca3af;
+            cursor: pointer;
+        }
+
+        .nav button:hover {
+            color: #facc15;
+            background: #111827;
+        }
+
+        .nav button.active {
+            color: #facc15;
+            border-bottom: 2px solid #facc15;
+        }
+
+        .page {
+            display: none;
             padding: 20px;
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 20px;
+        }
+
+        .active-page {
+            display: block;
         }
 
         .panel {
@@ -47,69 +100,150 @@
             padding: 15px;
             border-radius: 10px;
             border: 1px solid #1f2937;
-            transition: 0.3s;
+            margin-bottom: 15px;
         }
 
-        .panel:hover {
-            box-shadow: 0 0 10px rgba(250, 204, 21, 0.2);
-        }
-
-        .panel h3 {
+        .panel h2, .panel h3 {
+            font-family: 'Orbitron', sans-serif;
             color: #facc15;
         }
 
-        .accent-red {
-            border-left: 4px solid #ef4444;
+        /* MAP */
+        .map {
+            position: relative;
+            height: 350px;
+            background: radial-gradient(circle at center, #0f172a, #05070a);
+            border: 1px solid #1f2937;
+            border-radius: 10px;
+            overflow: hidden;
         }
 
-        .accent-yellow {
-            border-left: 4px solid #facc15;
+        .dot {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            cursor: pointer;
         }
 
-        .full {
-            grid-column: span 2;
+        .green { background: #22c55e; box-shadow: 0 0 10px #22c55e; }
+        .red { background: #ef4444; box-shadow: 0 0 10px #ef4444; }
+
+        /* MOVEMENT */
+        @keyframes drift {
+            0% { transform: translate(0,0); }
+            50% { transform: translate(10px,-6px); }
+            100% { transform: translate(0,0); }
         }
 
-        .threat-low { color: #22c55e; }
-        .threat-elevated { color: #facc15; }
-        .threat-critical { color: #ef4444; }
+        .green, .red {
+            animation: drift 3s infinite ease-in-out;
+        }
+
+        /* STREAM */
+        .stream {
+            font-size: 12px;
+            color: #22c55e;
+            height: 120px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .cursor {
+            display: inline-block;
+            width: 8px;
+            background: #22c55e;
+            animation: blink 0.8s infinite;
+        }
+
+        /* INTEL POPUP */
+        #popup {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: #0f172a;
+            border: 1px solid #1f2937;
+            padding: 10px;
+            display: none;
+            color: #facc15;
+        }
+
+        .enlist {
+            display: inline-block;
+            margin-top: 10px;
+            padding: 12px 18px;
+            background: #facc15;
+            color: black;
+            font-weight: bold;
+            text-decoration: none;
+        }
 
     </style>
 </head>
+
 <body>
+
+<!-- BOOT SCREEN -->
+<div id="boot">
+    <div class="boot-text">INITIALIZING VALOR COMMAND SYSTEM...</div>
+    <div class="boot-text">VERIFYING CLEARANCE LEVEL...</div>
+    <div class="boot-text">ACCESS GRANTED</div>
+</div>
 
 <header>
     <div class="logo">[VALOR] COMMAND CENTER</div>
     <div class="status">SYSTEM ONLINE • ALL UNITS OPERATIONAL</div>
 </header>
 
-<div class="container">
+<div class="nav">
+    <button onclick="showPage('dashboard')" class="active">Dashboard</button>
+    <button onclick="showPage('operations')">Operations</button>
+    <button onclick="showPage('personnel')">Personnel</button>
+    <button onclick="showPage('intel')">Intel</button>
+</div>
 
-    <div class="panel accent-yellow full">
-        <h2>Varkonian Armada Land Operations Regiment</h2>
-        <p><i>"Silent. Surgical. Certain."</i></p>
-        <p>Born from elite Special Forces & defense experts, VALOR is a Private Military Company specializing in rapid global deployment, precision urban warfare, and surgical strike operations.</p>
+<!-- DASHBOARD -->
+<div id="dashboard" class="page active-page">
+    <div class="panel">
+        <h2>VALOR Overview</h2>
+        <p>"Silent. Surgical. Certain."</p>
+    </div>
+</div>
+
+<!-- OPERATIONS -->
+<div id="operations" class="page">
+
+    <div class="panel">
+        <h3>Live Tactical Map</h3>
+
+        <div class="map">
+
+            <div class="dot green" style="top:60px; left:90px;" onclick="intel('Friendly Unit Alpha')"></div>
+            <div class="dot green" style="top:160px; left:240px;" onclick="intel('Recon Squad Bravo')"></div>
+            <div class="dot red" style="top:120px; left:180px;" onclick="intel('Hostile Signal Detected')"></div>
+            <div class="dot red" style="top:220px; left:120px;" onclick="intel('Unknown Contact')"></div>
+
+        </div>
     </div>
 
-    <div class="panel accent-red">
-        <h3>🌍 Current Operations</h3>
-        <p>🛰️ Blackhawk Rescue Mission 5</p>
-        <p>🧪 Examination (NSA Contract)</p>
-        <p>Menlo infected zone containment & Ronograd combat ops</p>
-        <p id="threat" class="threat-elevated">Threat Level: ELEVATED</p>
+    <div class="panel">
+        <h3>ENCRYPTED STREAM</h3>
+        <div class="stream" id="stream"></div>
     </div>
 
-    <div class="panel accent-yellow">
-        <h3>🎖️ Promotion Protocol</h3>
-        <p>Promotion earned through discipline, combat results & leadership.</p>
-        <p>Authorized by Armada Council + higher.</p>
-    </div>
+    <a class="enlist" href="https://www.roblox.com/communities/1098707/VALOR-Varkonian-Armada-Land-Operations-Regiment#!/about" target="_blank">
+        ENLIST NOW
+    </a>
 
-    <div class="panel accent-red full">
-        <h3>🪖 VALOR Rank Structure</h3>
+</div>
+
+<!-- PERSONNEL -->
+<div id="personnel" class="page">
+    <div class="panel">
+        <h3>Rank Structure</h3>
         <p>9 Operator</p>
         <p>5 Field Operative</p>
-        <p>3 Special Operations Unit</p>
+        <p>[CLASSIFIED] Special Operations Unit</p>
         <p>1 Valor Assault Officer</p>
         <p>1 Security Enforcement Supervisor</p>
         <p>2 Warfare Operations Command</p>
@@ -117,28 +251,94 @@
         <p>1 Chief of Valor</p>
         <p>1 Varkonian President</p>
     </div>
-
 </div>
 
+<!-- INTEL -->
+<div id="intel" class="page">
+    <div class="panel">
+        <h3>Live Intel Feed</h3>
+        <div id="feed"></div>
+    </div>
+</div>
+
+<!-- POPUP -->
+<div id="popup"></div>
+
 <script>
-setInterval(() => {
-    const levels = ["LOW", "ELEVATED", "CRITICAL"];
-    const random = levels[Math.floor(Math.random() * levels.length)];
-    const threat = document.getElementById("threat");
 
-    threat.innerText = "Threat Level: " + random;
+/* BOOT SCREEN */
+setTimeout(() => {
+    document.getElementById("boot").style.display = "none";
+}, 3000);
 
-    threat.classList.remove("threat-low", "threat-elevated", "threat-critical");
+/* NAV */
+function showPage(pageId) {
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active-page'));
+    document.getElementById(pageId).classList.add('active-page');
 
-    if(random === "LOW") {
-        threat.classList.add("threat-low");
-    } else if(random === "ELEVATED") {
-        threat.classList.add("threat-elevated");
-    } else {
-        threat.classList.add("threat-critical");
+    document.querySelectorAll('.nav button').forEach(btn => btn.classList.remove('active'));
+    event.target.classList.add('active');
+}
+
+/* STREAM */
+const stream = document.getElementById("stream");
+
+function addStream() {
+    const chars = "01█▓▒░<>/\\|VALOROPS";
+    let line = "";
+
+    for(let i = 0; i < 50; i++) {
+        line += chars[Math.floor(Math.random() * chars.length)];
     }
 
-}, 3000);
+    const p = document.createElement("p");
+    p.textContent = line + "█";
+
+    stream.prepend(p);
+
+    if(stream.children.length > 8) {
+        stream.removeChild(stream.lastChild);
+    }
+}
+
+setInterval(addStream, 120);
+
+/* FEED */
+const feed = document.getElementById("feed");
+
+const events = [
+    "Unit moving through Ronograd",
+    "Hostile contact locked",
+    "Drone overwatch active",
+    "Extraction window confirmed",
+    "Perimeter stabilized"
+];
+
+function addFeed() {
+    const time = new Date().toLocaleTimeString();
+    const e = events[Math.floor(Math.random() * events.length)];
+
+    const p = document.createElement("p");
+    p.textContent = `[${time}] ${e}`;
+
+    feed.prepend(p);
+
+    if(feed.children.length > 8) feed.removeChild(feed.lastChild);
+}
+
+setInterval(addFeed, 2000);
+
+/* MAP INTEL */
+function intel(text) {
+    const box = document.getElementById("popup");
+    box.style.display = "block";
+    box.textContent = "INTEL: " + text;
+
+    setTimeout(() => {
+        box.style.display = "none";
+    }, 3000);
+}
+
 </script>
 
 </body>
