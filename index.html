@@ -734,57 +734,231 @@ document.querySelectorAll('.rank-item').forEach(item => {
   });
 });
 
-/* HOLOGRAPHIC GLOBE */
+/* HOLOGRAPHIC GLOBE — with land/ocean texture */
 (function() {
   const canvas = document.getElementById('globe-canvas');
-  const panel = document.getElementById('globe-panel');
+  const panel  = document.getElementById('globe-panel');
+
   const renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: true });
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-  const scene = new THREE.Scene();
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
+
+  const scene  = new THREE.Scene();
   const camera = new THREE.PerspectiveCamera(42, 1, 0.1, 100);
   camera.position.z = 3.0;
+
   function resize() {
     const w = panel.clientWidth, h = Math.max(panel.clientHeight, 760);
-    renderer.setSize(w, h); camera.aspect = w/h; camera.updateProjectionMatrix();
+    renderer.setSize(w, h); camera.aspect = w / h; camera.updateProjectionMatrix();
   }
-  const BLUE=0x00c8ff, GREEN=0x22c55e, RED=0xef4444;
-  const wfGeo = new THREE.SphereGeometry(1,36,22);
-  const globe = new THREE.Mesh(wfGeo, new THREE.MeshBasicMaterial({color:BLUE,wireframe:true,transparent:true,opacity:0.10}));
+
+  const BLUE = 0x00c8ff, GREEN = 0x22c55e, RED = 0xef4444;
+
+  /* ── BUILD LAND/OCEAN TEXTURE ON A 2D CANVAS ── */
+  function buildGlobeTexture() {
+    const W = 1024, H = 512;
+    const tc = document.createElement('canvas');
+    tc.width = W; tc.height = H;
+    const ctx = tc.getContext('2d');
+
+    // Ocean base — deep teal holo
+    ctx.fillStyle = '#001a2e';
+    ctx.fillRect(0, 0, W, H);
+
+    // Ocean grid lines
+    ctx.strokeStyle = 'rgba(0,200,255,0.12)';
+    ctx.lineWidth = 0.5;
+    for (let x = 0; x < W; x += W/24) { ctx.beginPath(); ctx.moveTo(x,0); ctx.lineTo(x,H); ctx.stroke(); }
+    for (let y = 0; y < H; y += H/12) { ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(W,y); ctx.stroke(); }
+
+    // Helper: lon/lat → canvas xy
+    function xy(lon, lat) {
+      return [(lon + 180) / 360 * W, (90 - lat) / 180 * H];
+    }
+
+    // Land fill colour — bright teal/green holo
+    const LAND = 'rgba(0,210,180,0.25)';
+    const LAND_BORDER = 'rgba(0,230,200,0.55)';
+
+    function drawLand(coords) {
+      ctx.beginPath();
+      coords.forEach(([lon, lat], i) => {
+        const [x, y] = xy(lon, lat);
+        i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+      });
+      ctx.closePath();
+      ctx.fillStyle = LAND;
+      ctx.fill();
+      ctx.strokeStyle = LAND_BORDER;
+      ctx.lineWidth = 0.8;
+      ctx.stroke();
+    }
+
+    // ── CONTINENTS (simplified polygons) ──
+
+    // North America
+    drawLand([[-168,71],[-140,70],[-100,73],[-85,68],[-65,60],[-52,47],[-66,44],[-75,35],[-80,25],[-87,15],[-77,8],[-83,9],[-85,16],[-90,15],[-92,16],[-88,20],[-90,21],[-85,22],[-87,16],[-85,10],[-77,8],[-80,25],[-75,35],[-66,44],[-52,47],[-55,48],[-53,47],[-56,52],[-60,47],[-65,44],[-67,47],[-70,47],[-75,45],[-80,43],[-83,42],[-83,46],[-88,46],[-90,46],[-92,48],[-95,49],[-100,49],[-110,49],[-120,49],[-130,54],[-135,58],[-140,60],[-148,60],[-152,59],[-160,58],[-166,60],[-168,66],[-168,71]]);
+
+    // Greenland
+    drawLand([[-44,83],[-17,83],[-18,76],[-25,68],[-44,59],[-52,65],[-54,70],[-50,78],[-44,83]]);
+
+    // South America
+    drawLand([[-80,8],[-75,10],[-62,11],[-60,7],[-52,4],[-50,0],[-49,-1],[-44,-2],[-35,-3],[-35,-8],[-37,-12],[-39,-17],[-40,-20],[-41,-22],[-44,-23],[-47,-24],[-48,-28],[-50,-30],[-52,-33],[-58,-34],[-62,-38],[-65,-42],[-66,-45],[-68,-48],[-68,-52],[-66,-55],[-70,-52],[-73,-45],[-75,-38],[-72,-30],[-70,-22],[-75,-15],[-77,-8],[-77,0],[-80,0],[-80,8]]);
+
+    // Europe
+    drawLand([[10,71],[28,71],[30,68],[25,65],[30,60],[28,56],[20,55],[14,55],[8,55],[5,52],[2,51],[-2,49],[-5,48],[-2,44],[3,43],[8,44],[14,44],[19,41],[24,38],[26,40],[28,41],[30,43],[34,42],[28,45],[24,47],[16,48],[14,50],[18,54],[20,54],[24,58],[26,60],[25,65],[30,68],[28,71],[10,71]]);
+
+    // Africa
+    drawLand([[-5,35],[10,37],[15,37],[25,37],[32,30],[36,22],[42,11],[44,8],[42,2],[40,-3],[36,-10],[34,-17],[32,-22],[30,-30],[27,-34],[18,-35],[15,-30],[12,-18],[8,-4],[2,4],[-3,5],[-8,4],[-16,10],[-16,15],[-12,20],[-8,27],[-5,35]]);
+
+    // Asia (simplified)
+    drawLand([[26,42],[36,42],[42,37],[50,30],[56,24],[60,22],[68,23],[72,20],[80,13],[80,10],[76,8],[78,8],[80,13],[72,20],[68,23],[60,22],[56,24],[50,30],[42,37],[36,42],[26,42]]);
+    drawLand([[26,42],[34,42],[42,42],[52,40],[58,38],[60,42],[65,42],[72,45],[80,50],[90,50],[100,50],[110,52],[120,52],[130,52],[135,48],[140,46],[138,36],[136,34],[130,31],[120,30],[114,22],[108,21],[104,10],[100,2],[104,-2],[108,-6],[115,-8],[120,0],[125,0],[130,-3],[135,-4],[130,-8],[122,-10],[118,-8],[110,-8],[104,-4],[100,2],[104,10],[108,21],[114,22],[120,30],[130,31],[136,34],[138,36],[140,46],[145,44],[150,46],[155,52],[160,56],[166,60],[170,64],[168,68],[160,70],[150,70],[140,72],[130,74],[120,74],[110,74],[100,72],[90,72],[80,72],[70,72],[60,68],[50,70],[42,68],[34,68],[28,68],[26,68],[24,65],[26,60],[28,56],[30,52],[32,48],[30,44],[26,42]]);
+
+    // Australia
+    drawLand([[114,-22],[120,-20],[126,-14],[136,-12],[138,-14],[136,-16],[130,-16],[128,-18],[130,-22],[130,-28],[124,-34],[118,-35],[114,-30],[114,-22]]);
+    drawLand([[136,-12],[140,-14],[148,-18],[152,-24],[154,-28],[152,-32],[152,-38],[146,-38],[142,-36],[138,-34],[136,-30],[136,-22],[136,-14],[136,-12]]);
+
+    // Japan
+    drawLand([[130,31],[132,34],[134,36],[136,36],[138,38],[140,40],[142,44],[142,42],[140,38],[138,36],[136,34],[132,34],[130,31]]);
+
+    // UK
+    drawLand([[-6,58],[-2,58],[0,58],[2,54],[-2,52],[-3,51],[-5,50],[-6,52],[-6,58]]);
+    drawLand([[-8,53],[-6,55],[-4,57],[-6,58],[-8,56],[-8,53]]);
+
+    return new THREE.CanvasTexture(tc);
+  }
+
+  /* ── GLOBE SPHERE with texture ── */
+  const globeTex = buildGlobeTexture();
+  const globeGeo = new THREE.SphereGeometry(1, 64, 40);
+  const globeMat = new THREE.MeshBasicMaterial({ map: globeTex, transparent: true, opacity: 0.92 });
+  const globe = new THREE.Mesh(globeGeo, globeMat);
   scene.add(globe);
-  const innerMesh = new THREE.Mesh(new THREE.SphereGeometry(0.97,32,20), new THREE.MeshBasicMaterial({color:0x001520,transparent:true,opacity:0.75,side:THREE.BackSide}));
-  scene.add(innerMesh);
-  function addRing(pts,color,opacity){const g=new THREE.BufferGeometry().setFromPoints(pts);scene.add(new THREE.Line(g,new THREE.LineBasicMaterial({color,transparent:true,opacity})));}
-  function circlePts(r,seg){const p=[];for(let i=0;i<=seg;i++){const a=(i/seg)*Math.PI*2;p.push(new THREE.Vector3(Math.cos(a)*r,0,Math.sin(a)*r));}return p;}
-  addRing(circlePts(1.01,128),BLUE,0.45);
-  const pmPts=[];for(let i=0;i<=128;i++){const a=(i/128)*Math.PI*2;pmPts.push(new THREE.Vector3(0,Math.cos(a)*1.01,Math.sin(a)*1.01));}addRing(pmPts,BLUE,0.3);
-  for(let lat=-60;lat<=60;lat+=30){if(lat===0)continue;const r=Math.cos(lat*Math.PI/180)*1.01,y=Math.sin(lat*Math.PI/180)*1.01;const p=[];for(let i=0;i<=64;i++){const a=(i/64)*Math.PI*2;p.push(new THREE.Vector3(Math.cos(a)*r,y,Math.sin(a)*r));}addRing(p,BLUE,0.1);}
-  const op=[];for(let i=0;i<=128;i++){const a=(i/128)*Math.PI*2;op.push(new THREE.Vector3(Math.cos(a),Math.sin(a),0));}
-  [[1.05,0.30],[1.10,0.14],[1.17,0.06],[1.26,0.03]].forEach(([s,o])=>{const g=new THREE.BufferGeometry().setFromPoints(op.map(p=>p.clone().multiplyScalar(s)));scene.add(new THREE.Line(g,new THREE.LineBasicMaterial({color:BLUE,transparent:true,opacity:o})));});
-  for(let lng=0;lng<360;lng+=45){const p=[],theta=lng*Math.PI/180;for(let i=0;i<=32;i++){const phi=(i/32)*Math.PI;p.push(new THREE.Vector3(Math.sin(phi)*Math.cos(theta)*1.01,Math.cos(phi)*1.01,Math.sin(phi)*Math.sin(theta)*1.01));}addRing(p,BLUE,0.07);}
-  function ll3d(lat,lng,r){const phi=(90-lat)*Math.PI/180,theta=(lng+180)*Math.PI/180;return new THREE.Vector3(-r*Math.sin(phi)*Math.cos(theta),r*Math.cos(phi),r*Math.sin(phi)*Math.sin(theta));}
-  const dotGeo=new THREE.SphereGeometry(0.022,8,8),ringGeo=new THREE.RingGeometry(0.026,0.042,12);
-  function spawnDot(lat,lng,color){
-    const dot=new THREE.Mesh(dotGeo,new THREE.MeshBasicMaterial({color,transparent:true,opacity:0.95}));
-    const pos=ll3d(lat,lng,1.02); dot.position.copy(pos); scene.add(dot);
-    const rMat=new THREE.MeshBasicMaterial({color,transparent:true,opacity:0.5,side:THREE.DoubleSide});
-    const ring=new THREE.Mesh(ringGeo,rMat); ring.position.copy(pos); ring.lookAt(new THREE.Vector3(0,0,0)); scene.add(ring);
-    let sc=1+Math.random(),growing=Math.random()>0.5;
-    setTimeout(function a(){if(growing){sc+=0.02;if(sc>2.5)growing=false;}else{sc-=0.02;if(sc<1){growing=true;sc=1;}}ring.scale.setScalar(sc);rMat.opacity=0.45*Math.max(0,1-(sc-1)/1.5);requestAnimationFrame(a);},Math.random()*2500);
+
+  /* Wireframe overlay */
+  const wfMesh = new THREE.Mesh(
+    new THREE.SphereGeometry(1.002, 36, 20),
+    new THREE.MeshBasicMaterial({ color: BLUE, wireframe: true, transparent: true, opacity: 0.06 })
+  );
+  scene.add(wfMesh);
+
+  /* ── RINGS & LINES ── */
+  function addRing(pts, color, opacity) {
+    const g = new THREE.BufferGeometry().setFromPoints(pts);
+    scene.add(new THREE.Line(g, new THREE.LineBasicMaterial({ color, transparent: true, opacity })));
   }
-  const gc=Math.floor(Math.random()*15)+12,rc=Math.floor(Math.random()*8)+8;
-  for(let i=0;i<gc;i++) spawnDot((Math.random()*140)-70,(Math.random()*340)-170,GREEN);
-  for(let i=0;i<rc;i++) spawnDot((Math.random()*140)-70,(Math.random()*340)-170,RED);
-  document.getElementById('unit-counter').textContent='FRIENDLY: '+gc+'  //  HOSTILE: '+rc;
-  const pv=[];for(let i=0;i<400;i++){const r=1.35+Math.random()*0.9,phi=Math.random()*Math.PI*2,theta=Math.random()*Math.PI;pv.push(r*Math.sin(theta)*Math.cos(phi),r*Math.cos(theta),r*Math.sin(theta)*Math.sin(phi));}
-  const pGeo=new THREE.BufferGeometry();pGeo.setAttribute('position',new THREE.Float32BufferAttribute(pv,3));
-  scene.add(new THREE.Points(pGeo,new THREE.PointsMaterial({color:BLUE,size:0.01,transparent:true,opacity:0.25})));
-  scene.add(new THREE.AmbientLight(0xffffff,1));
-  resize(); window.addEventListener('resize',resize);
-  let rotY=0,dragging=false,lastX=0;
-  canvas.addEventListener('mousedown',e=>{dragging=true;lastX=e.clientX;});
-  window.addEventListener('mouseup',()=>{dragging=false;});
-  canvas.addEventListener('mousemove',e=>{if(dragging){rotY+=(e.clientX-lastX)*0.005;lastX=e.clientX;}});
-  (function animate(){requestAnimationFrame(animate);if(!dragging)rotY+=0.0025;globe.rotation.y=rotY;innerMesh.rotation.y=rotY;renderer.render(scene,camera);})();
+  function circlePts(r, seg) {
+    const p = [];
+    for (let i = 0; i <= seg; i++) { const a = (i / seg) * Math.PI * 2; p.push(new THREE.Vector3(Math.cos(a)*r, 0, Math.sin(a)*r)); }
+    return p;
+  }
+  addRing(circlePts(1.01, 128), BLUE, 0.4);
+  for (let lat = -60; lat <= 60; lat += 30) {
+    if (lat === 0) continue;
+    const r = Math.cos(lat * Math.PI / 180) * 1.01, y = Math.sin(lat * Math.PI / 180) * 1.01;
+    const p = []; for (let i = 0; i <= 64; i++) { const a = (i/64)*Math.PI*2; p.push(new THREE.Vector3(Math.cos(a)*r, y, Math.sin(a)*r)); }
+    addRing(p, BLUE, 0.08);
+  }
+  const op = []; for (let i = 0; i <= 128; i++) { const a = (i/128)*Math.PI*2; op.push(new THREE.Vector3(Math.cos(a), Math.sin(a), 0)); }
+  [[1.05,0.28],[1.10,0.13],[1.17,0.06],[1.26,0.02]].forEach(([s,o]) => {
+    const g = new THREE.BufferGeometry().setFromPoints(op.map(p => p.clone().multiplyScalar(s)));
+    scene.add(new THREE.Line(g, new THREE.LineBasicMaterial({ color: BLUE, transparent: true, opacity: o })));
+  });
+
+  /* ── DOTS ── */
+  function ll3d(lat, lng, r) {
+    const phi = (90 - lat) * Math.PI / 180, theta = (lng + 180) * Math.PI / 180;
+    return new THREE.Vector3(-r*Math.sin(phi)*Math.cos(theta), r*Math.cos(phi), r*Math.sin(phi)*Math.sin(theta));
+  }
+
+  // Land positions for dots (keeps them on continents)
+  const landPositions = [
+    // North America
+    [-100,50],[-95,40],[-110,45],[-80,43],[-75,38],[-90,30],[-120,37],[-105,35],[-87,35],[-70,42],
+    // South America
+    [-58,-15],[-48,-12],[-66,-30],[-70,-10],[-55,-5],[-44,-20],[-65,-40],
+    // Europe
+    [10,52],[2,48],[15,50],[25,52],[20,60],[5,52],[-3,52],[10,60],[20,48],[28,48],
+    // Africa
+    [20,10],[30,0],[15,5],[35,-5],[28,-20],[18,-30],[5,15],[-5,10],[40,10],[10,20],
+    // Asia
+    [80,30],[100,35],[120,35],[90,25],[70,40],[60,50],[110,20],[130,35],[100,50],[140,40],
+    [75,20],[90,10],[60,25],[115,30],[125,45],[80,60],[100,65],[50,40],[40,35],[35,30],
+    // Australia
+    [135,-25],[150,-30],[145,-18],[120,-25],[130,-35],[148,-38],
+  ];
+
+  function spawnDot(lat, lng, isGreen) {
+    // Green = large, bright, powerful. Red = small, dim, plentiful
+    const size     = isGreen ? 0.028 : 0.016;
+    const color    = isGreen ? GREEN : RED;
+    const maxRing  = isGreen ? 3.5 : 1.8;   // green rings expand much further
+    const ringOpacity = isGreen ? 0.55 : 0.3;
+    const speed    = isGreen ? 0.012 : 0.025; // green pulses slow & powerful, red jittery
+
+    const dotGeo = new THREE.SphereGeometry(size, 8, 8);
+    const dot = new THREE.Mesh(dotGeo, new THREE.MeshBasicMaterial({ color, transparent: true, opacity: 0.98 }));
+    const pos = ll3d(lat, lng, 1.022); dot.position.copy(pos); scene.add(dot);
+
+    // Inner glow sphere (only greens)
+    if (isGreen) {
+      const glowGeo = new THREE.SphereGeometry(size * 2.5, 8, 8);
+      const glowMat = new THREE.MeshBasicMaterial({ color: GREEN, transparent: true, opacity: 0.08 });
+      const glow = new THREE.Mesh(glowGeo, glowMat); glow.position.copy(pos); scene.add(glow);
+    }
+
+    // Pulsing ring
+    const rGeo = new THREE.RingGeometry(size * 1.2, size * 2.0, 12);
+    const rMat = new THREE.MeshBasicMaterial({ color, transparent: true, opacity: ringOpacity, side: THREE.DoubleSide });
+    const ring = new THREE.Mesh(rGeo, rMat); ring.position.copy(pos); ring.lookAt(new THREE.Vector3(0,0,0)); scene.add(ring);
+
+    let sc = 1 + Math.random(), growing = true;
+    const delay = Math.random() * 2500;
+    setTimeout(function a() {
+      if (growing) { sc += speed; if (sc > maxRing) growing = false; }
+      else { sc -= speed; if (sc < 1) { growing = true; sc = 1; } }
+      ring.scale.setScalar(sc);
+      rMat.opacity = ringOpacity * Math.max(0, 1 - (sc - 1) / (maxRing - 1));
+      requestAnimationFrame(a);
+    }, delay);
+  }
+
+  // Green: 14–18 units on land positions
+  const gc = Math.floor(Math.random() * 5) + 14;
+  const shuffled = [...landPositions].sort(() => Math.random() - 0.5);
+  for (let i = 0; i < gc; i++) spawnDot(shuffled[i][1], shuffled[i][0], true);
+
+  // Red: 3× more than green, random positions
+  const rc = gc * 3 + Math.floor(Math.random() * 10) + 5;
+  for (let i = 0; i < rc; i++) spawnDot((Math.random()*140)-70, (Math.random()*340)-170, false);
+
+  document.getElementById('unit-counter').textContent = 'VALOR: ' + gc + '  ⚡  ENEMY: ' + rc;
+  document.getElementById('unit-friendly').textContent = gc;
+  document.getElementById('unit-enemy').textContent = rc;
+
+  /* Particles */
+  const pv = [];
+  for (let i = 0; i < 300; i++) {
+    const r=1.35+Math.random()*0.8, phi=Math.random()*Math.PI*2, theta=Math.random()*Math.PI;
+    pv.push(r*Math.sin(theta)*Math.cos(phi), r*Math.cos(theta), r*Math.sin(theta)*Math.sin(phi));
+  }
+  const pGeo = new THREE.BufferGeometry(); pGeo.setAttribute('position', new THREE.Float32BufferAttribute(pv, 3));
+  scene.add(new THREE.Points(pGeo, new THREE.PointsMaterial({ color: BLUE, size: 0.009, transparent: true, opacity: 0.2 })));
+  scene.add(new THREE.AmbientLight(0xffffff, 1));
+
+  resize(); window.addEventListener('resize', resize);
+  let rotY = 0, dragging = false, lastX = 0;
+  canvas.addEventListener('mousedown', e => { dragging = true; lastX = e.clientX; });
+  window.addEventListener('mouseup', () => { dragging = false; });
+  canvas.addEventListener('mousemove', e => { if (dragging) { rotY += (e.clientX - lastX) * 0.005; lastX = e.clientX; } });
+
+  (function animate() {
+    requestAnimationFrame(animate);
+    if (!dragging) rotY += 0.002;
+    globe.rotation.y = rotY;
+    wfMesh.rotation.y = rotY;
+    renderer.render(scene, camera);
+  })();
 })();
 
 /* LIVE FEED */
